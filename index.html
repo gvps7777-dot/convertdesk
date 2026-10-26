@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
 /* Layout: navy masthead with the product name, then one white work card overlapping it. Three numbered steps (formats, file, convert) because the order is real. Format colours mark only the chosen tiles and result tag. */
 :root {
@@ -34,8 +34,8 @@
   --jpg: #9a5f00;
   --err: #c0332e;
   --shadow: 0 1px 2px rgba(11,30,58,.06), 0 12px 32px rgba(11,30,58,.10);
-  --display: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --body: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
@@ -160,6 +160,122 @@ footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top
 .opt .hint { font-size: 12.5px; color: var(--muted); }
 .checker { background-color: #fff; background-image: linear-gradient(45deg, #d5dbe3 25%, transparent 25%, transparent 75%, #d5dbe3 75%), linear-gradient(45deg, #d5dbe3 25%, transparent 25%, transparent 75%, #d5dbe3 75%); background-size: 16px 16px; background-position: 0 0, 8px 8px; }
 .thumbs .gain { color: var(--xlsx); font-weight: 600; }
+.getapp { background: #fff; color: #0b1e3a; display: flex; align-items: center; gap: 12px; padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top)); border-bottom: 1px solid rgba(11,30,58,.12); }
+.getapp img { width: 38px; height: 38px; border-radius: 10px; flex: none; }
+.getapp .tx { flex: 1; min-width: 0; font: 600 13px/1.25 var(--body); }
+.getapp .tx small { display: block; font-weight: 500; color: #51627d; font-size: 12px; }
+.getapp button { appearance: none; border: 0; background: #1f5eff; color: #fff; font: 700 13px var(--body); padding: 10px 14px; border-radius: 999px; min-height: 40px; cursor: pointer; white-space: nowrap; }
+.getapp .x { background: none; color: #51627d; font-size: 22px; padding: 4px 8px; min-height: 0; }
+.sheet-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
+.sheet { background: var(--surface); color: var(--ink); width: 100%; max-width: 520px; border-radius: 18px 18px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 10px; }
+.sheet h3 { margin: 0; font-size: 18px; } .sheet ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; } .sheet p { margin: 0; color: var(--muted); font-size: 13px; }
+
+/* ---- polish pass ---- */
+.band { background: radial-gradient(120% 90% at 85% -10%, #1f4fb8 0%, rgba(31,79,184,0) 55%), linear-gradient(180deg, #0b1e3a 0%, #0a1a33 100%); padding-block: calc(22px + env(safe-area-inset-top, 0px)) 88px; }
+.brand { gap: 12px; } .mark { width: 52px; height: 52px; border-radius: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 0 2px rgba(255,255,255,.2); }
+.mark img { border-radius: 13px; }
+.brand b { font: 800 20px/1.1 var(--display); letter-spacing: -.01em; text-transform: none; color: #fff; }
+.brand small { display: block; font: 500 12px/1.3 var(--body); color: var(--band-muted); margin-top: 3px; }
+h1 { font-size: 30px; line-height: 1.12; margin-top: 6px; }
+.band p { font-size: 15px; line-height: 1.5; }
+.chips span { background: rgba(255,255,255,.06); }
+.wrap { margin-top: -62px; }
+.panel { border-radius: 20px; box-shadow: 0 1px 2px rgba(11,30,58,.06), 0 14px 38px rgba(11,30,58,.14); }
+.modes { border-radius: 16px; box-shadow: 0 8px 24px rgba(11,30,58,.18); }
+.modes button { font-size: 15px; min-height: 48px; border-radius: 12px; }
+.tile { border-radius: 14px; padding: 16px 4px 13px; box-shadow: 0 1px 0 rgba(11,30,58,.04); }
+.tile b { font-size: 16px; }
+.btn { border-radius: 14px; min-height: 54px; font-size: 16px; }
+.btn:not(.ghost):not(:disabled) { background: linear-gradient(180deg, #3a73ff, #1f5eff); box-shadow: 0 8px 20px rgba(31,94,255,.35); }
+.drop { border-radius: 16px; }
+.num { box-shadow: 0 2px 6px rgba(11,30,58,.25); }
+.trust { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
+.trust div { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 10px; text-align: center; font-size: 11.5px; line-height: 1.35; gap: 3px; }
+.trust b { font-size: 13px; }
+.getapp { padding: 8px 12px; gap: 10px; }
+.getapp img { width: 34px; height: 34px; border-radius: 9px; }
+.getapp .tx { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .getapp .tx small { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
+.getapp #getapp-go { padding: 9px 12px; font-size: 12.5px; min-height: 38px; }
+footer { font-size: 12px; }
+
+/* ---- redesign: document tray. Each format is a sheet in its own colour; the card edge shows the route from one colour to the other. ---- */
+:root { --paper: #f3f4f7; --ink-btn: #111827; --on-fmt: #ffffff; --from-c: var(--xlsx); --to-c: var(--pdf); --jpg: #b87400; --xlsx: #14804a; --docx: #2b5fd9; --pdf: #d6382f; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --on-fmt: #0a1220; --ink-btn: #e8eef8; --paper: #080f1b; } }
+:root[data-theme="dark"] { --on-fmt: #0a1220; --ink-btn: #e8eef8; --paper: #080f1b; }
+body { background: var(--bg); letter-spacing: -.005em; }
+.band { background: transparent; color: var(--ink); padding-block: calc(18px + env(safe-area-inset-top, 0px)) 6px; }
+.band-in { gap: 10px; }
+.brand b { color: var(--ink); font: 800 19px/1 var(--display); letter-spacing: -.02em; }
+.brand small { display: none; }
+.mark { width: 40px; height: 40px; border-radius: 11px; box-shadow: 0 2px 8px rgba(17,24,39,.25); }
+.mark img { border-radius: 11px; }
+h1 { font: 800 31px/1.08 var(--display); letter-spacing: -.035em; color: var(--ink); margin-top: 14px; }
+.band p { color: var(--muted); font-size: 15px; max-width: 34ch; }
+.chips { display: none; }
+.wrap { margin-top: 6px; gap: 14px; }
+.modes { box-shadow: none; border-radius: 14px; background: color-mix(in srgb, var(--ink) 7%, var(--bg)); border: 0; padding: 4px; }
+.modes button { border-radius: 11px; min-height: 44px; font: 700 14px/1 var(--body); color: var(--muted); }
+.modes button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(17,24,39,.18); }
+.panel { border: 0; border-radius: 22px; padding: 24px 18px 20px; background-color: var(--surface); background-image: linear-gradient(90deg, var(--from-c), var(--to-c)); background-size: 100% 5px; background-repeat: no-repeat; box-shadow: 0 1px 2px rgba(17,24,39,.05), 0 10px 30px rgba(17,24,39,.08); gap: 24px; }
+#view-tools .panel { --from-c: var(--docx); --to-c: var(--xlsx); }
+.lab { font: 700 16px/1.2 var(--display); letter-spacing: -.01em; }
+.num { background: var(--ink); color: var(--surface); width: 24px; height: 24px; font-size: 12px; box-shadow: none; }
+.tiles { gap: 9px; }
+.tile { position: relative; aspect-ratio: 4 / 5; justify-content: flex-end; padding: 10px 4px 11px; gap: 2px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; box-shadow: none; }
+.tile::before { content: ""; position: absolute; top: 0; right: 0; width: 18px; height: 18px; background: linear-gradient(225deg, var(--paper) 50%, color-mix(in srgb, var(--c) 28%, var(--surface)) 50%); border-bottom-left-radius: 6px; }
+.tile::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c); }
+.tile b { font: 800 17px/1 var(--display); letter-spacing: -.02em; color: var(--c); }
+.tile span { font-size: 12px; font-weight: 600; color: var(--muted); }
+.tile[aria-pressed="true"] { background: var(--c); border-color: var(--c); box-shadow: 0 8px 18px color-mix(in srgb, var(--c) 40%, transparent); transform: translateY(-2px); }
+.tile[aria-pressed="true"] b, .tile[aria-pressed="true"] span { color: var(--on-fmt); }
+.tile[aria-pressed="true"]::after { background: rgba(255,255,255,.35); }
+.tile[aria-pressed="true"]::before { background: linear-gradient(225deg, var(--surface) 50%, rgba(255,255,255,.35) 50%); }
+.tiles.two .tile { aspect-ratio: 16 / 9; align-items: flex-start; padding: 12px 14px; justify-content: flex-end; }
+.tile:disabled { opacity: .28; }
+.swap { border-radius: 999px; font-weight: 700; }
+.note { background: var(--soft); border: 0; border-left: 3px solid var(--to-c); border-radius: 4px 12px 12px 4px; color: var(--ink); font-size: 14px; }
+.drop { border: 2px dashed color-mix(in srgb, var(--from-c) 45%, var(--line)); background: color-mix(in srgb, var(--from-c) 5%, var(--surface)); border-radius: 16px; }
+.drop .ic { color: var(--from-c); }
+.drop .ext { color: var(--from-c); }
+.btn { border-radius: 14px; min-height: 54px; font: 700 16px/1 var(--display); letter-spacing: -.005em; }
+.btn:not(.ghost):not(:disabled) { background: var(--ink-btn); color: var(--surface); box-shadow: 0 6px 16px rgba(17,24,39,.22); }
+.btn:not(.ghost):not(:disabled) { text-shadow: none; }
+#go:not(:disabled) { background: var(--to-c); color: var(--on-fmt); box-shadow: 0 8px 20px color-mix(in srgb, var(--to-c) 45%, transparent); }
+.btn:disabled { background: color-mix(in srgb, var(--ink) 12%, var(--surface)); color: var(--muted); opacity: 1; }
+.btn.ghost { border-radius: 12px; font: 700 14px/1 var(--body); }
+.trust { display: none !important; }
+footer { color: var(--muted); text-align: left; font-size: 12.5px; padding: 0 4px; }
+.getapp { background: var(--ink-btn); color: var(--surface); border: 0; }
+.getapp .tx small { color: color-mix(in srgb, var(--surface) 65%, transparent); }
+.getapp #getapp-go { background: var(--surface); color: var(--ink); }
+.getapp .x { color: color-mix(in srgb, var(--surface) 70%, transparent); background: none; }
+.res-head .res-tag { border-radius: 8px; }
+.band.gut { padding-block: calc(14px + env(safe-area-inset-top, 0px)) 4px; }
+.swap-row { margin-block: 6px 2px; }
+@media (max-width: 480px) { h1 { font-size: 30px; } .band.gut { padding-block: calc(14px + env(safe-area-inset-top, 0px)) 4px; } .panel { padding: 24px 16px 20px; } .tiles { gap: 8px; } .tile { padding: 10px 2px 11px; } }
+
+/* ---- v3: dark stage with live route sheets ---- */
+.band.gut { background: #0a0f1e; color: #fff; position: relative; overflow: hidden; padding-block: calc(16px + env(safe-area-inset-top, 0px)) 64px; isolation: isolate; }
+.band.gut::before { content: ""; position: absolute; inset: -30% -20% auto -20%; height: 130%; z-index: -1; background: radial-gradient(40% 50% at 22% 62%, color-mix(in srgb, var(--from-c) 70%, transparent), transparent 70%), radial-gradient(40% 50% at 80% 55%, color-mix(in srgb, var(--to-c) 70%, transparent), transparent 70%); opacity: .55; filter: blur(8px); transition: opacity .4s; }
+.band.gut::after { content: ""; position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1.2px); background-size: 18px 18px; -webkit-mask-image: linear-gradient(180deg, #000 20%, transparent 95%); mask-image: linear-gradient(180deg, #000 20%, transparent 95%); }
+.brand b { color: #fff; } h1 { color: #fff; font-size: 34px; margin-top: 8px; } .band p { color: #aeb9d1; }
+.mark { box-shadow: 0 0 0 2px rgba(255,255,255,.25), 0 6px 18px rgba(0,0,0,.5); }
+.route { display: flex; align-items: center; justify-content: center; gap: 0; height: 168px; margin-top: 6px; perspective: 700px; }
+.sheet { position: relative; width: 106px; height: 140px; border-radius: 14px; background: var(--c); color: var(--on-fmt); display: flex; flex-direction: column; justify-content: flex-end; padding: 12px; box-shadow: 0 18px 36px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.35); transition: transform .5s cubic-bezier(.2,.8,.2,1), background .3s; }
+.sheet::before { content: ""; position: absolute; top: 0; right: 0; width: 28px; height: 28px; border-top-right-radius: 14px; background: linear-gradient(225deg, #0a0f1e 50%, rgba(255,255,255,.45) 50%); }
+.sheet::after { content: ""; position: absolute; left: 12px; right: 12px; top: 18px; height: 52px; background: repeating-linear-gradient(180deg, rgba(255,255,255,.42) 0 5px, transparent 5px 13px); -webkit-mask-image: linear-gradient(90deg, #000 70%, rgba(0,0,0,.5)); mask-image: linear-gradient(90deg, #000 70%, rgba(0,0,0,.5)); border-radius: 3px; }
+.sheet b { font: 800 22px/1 var(--display); letter-spacing: -.03em; } .sheet i { font: 600 12px/1.2 var(--body); font-style: normal; opacity: .85; margin-top: 3px; }
+.s-from { --c: var(--from-c); transform: rotate(-9deg) translateX(8px); z-index: 1; }
+.s-to { --c: var(--to-c); transform: rotate(7deg) translate(-8px, 12px); }
+.s-from.flip, .s-to.flip { animation: flip .5s cubic-bezier(.2,.8,.2,1); }
+@keyframes flip { from { transform: rotateY(90deg) scale(.9); opacity: .4; } }
+.arrow { position: relative; z-index: 3; width: 46px; height: 46px; border-radius: 50%; background: #fff; color: #0a0f1e; display: grid; place-items: center; margin: 0 -14px; box-shadow: 0 8px 20px rgba(0,0,0,.4); } .arrow svg { width: 22px; height: 22px; }
+.wrap { margin-top: -34px; position: relative; z-index: 2; }
+.modes { background: var(--surface); box-shadow: 0 10px 28px rgba(5,10,25,.28); }
+.getapp { background: #0a0f1e; border-bottom: 1px solid rgba(255,255,255,.1); }
+.getapp #getapp-go { background: #fff; color: #0a0f1e; }
+body.tools .route { display: none; } body.tools .band.gut { padding-bottom: 56px; }
+@media (prefers-reduced-motion: reduce) { .sheet, .s-from.flip, .s-to.flip { animation: none; transition: none; } }
 [hidden] { display: none !important; }
 @media (prefers-reduced-motion: reduce) { .bar i, .tile { transition: none; } }
 @media (max-width: 480px) {
@@ -170,16 +286,26 @@ footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top
 </style>
 </head>
 <body>
+<div class="getapp" id="getapp" hidden>
+  <img src="icon-192.png" alt="" width="38" height="38">
+  <div class="tx">Convert Desk<small>Free app for your phone</small></div>
+  <button type="button" id="getapp-go">Download this app</button>
+  <button type="button" class="x" id="getapp-x" aria-label="Close">×</button>
+</div>
+<div class="sheet-bg" id="sheet" hidden><div class="sheet" role="dialog" aria-label="Install steps">
+  <h3>Download this app</h3><div id="sheet-body"></div>
+  <button class="btn" type="button" id="sheet-ok">OK</button></div></div>
 
 
 <div class="band gut">
   <div class="band-in">
     <div class="brand">
       <div class="mark"><img src="icon-192.png" alt="" width="42" height="42"></div>
-      <b>File converter</b>
+      <div><b>Convert Desk</b><small>File converter &amp; image tools</small></div>
     </div>
-    <h1>Convert Desk</h1>
-    <p>Turn Excel, Word, PDF and JPG files into each other, in either direction. Your files stay on your device.</p>
+    <h1>What do you want to convert?</h1>
+    <p>Pick the file you have, then the file you need.</p>
+    <div class="route" aria-hidden="true"><div class="sheet s-from" id="rt-from"><b></b><i></i></div><div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></div><div class="sheet s-to" id="rt-to"><b></b><i></i></div></div>
     <div class="chips"><span>XLSX</span><span>DOCX</span><span>PDF</span><span>JPG</span></div>
   </div>
 </div>
@@ -265,7 +391,7 @@ footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top
         <div class="step-h"><span class="num">2</span><h2 class="lab">Add your images</h2></div>
         <div class="drop" id="t-drop">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-9 9"/></svg>
-          <p>Drop images here. Accepts <span class="ext">.jpg, .png or .webp</span>.</p>
+          <p>Tap or drop images. Accepts <span class="ext">.jpg, .png or .webp</span>.</p>
           <div class="row" style="justify-content:center">
             <label class="btn ghost" for="t-file">Choose images</label>
             <button class="btn ghost" type="button" id="t-sample">Try a sample</button>
@@ -329,11 +455,11 @@ footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top
   </div>
 
   <div class="trust">
-    <div><b>Private</b>Files are not uploaded anywhere.</div>
-    <div><b>No sign-up</b>Nothing to install or pay for.</div>
-    <div><b>Both ways</b>Excel, Word, PDF and JPG to each other.</div>
+    <div><b>Private</b>Files stay on your phone</div>
+    <div><b>Free</b>No sign-up needed</div>
+    <div><b>Both ways</b>All four formats</div>
   </div>
-  <footer>The Word, Excel, PDF and text readers load from a public library host the first time you use them.</footer>
+  <footer>Your files never leave your device. Readers load from a public library the first time you use them, so connect to the internet once.</footer>
 </div>
 <script>
 "use strict";
@@ -926,12 +1052,22 @@ function setFrom(k) {
   if (to === from) to = ORDER.find((x) => x !== from);
   refresh();
 }
+let lastRoute = "";
+function drawRoute() {
+  const key = from + ">" + to;
+  [["rt-from", from], ["rt-to", to]].forEach(([id, k]) => {
+    const el = $(id); if (!el) return; el.firstChild.textContent = FORMATS[k].tag; el.lastChild.textContent = FORMATS[k].name;
+    if (lastRoute && !lastRoute.includes(k + (id === "rt-from" ? ">" : "")) ) { el.classList.remove("flip"); void el.offsetWidth; el.classList.add("flip"); }
+  });
+  lastRoute = key;
+}
 function refresh() {
-  buildTiles();
+  buildTiles(); drawRoute();
+  document.documentElement.style.setProperty("--from-c", "var(--" + from + ")"); document.documentElement.style.setProperty("--to-c", "var(--" + to + ")");
   $("note").textContent = NOTES[from + ">" + to];
   const F = FORMATS[from];
   $("file").accept = F.accept; $("file").multiple = from === "jpg";
-  $("drop-text").innerHTML = "Drop " + (from === "jpg" ? "images" : "a file") + " here. Accepts <span class=\"ext\">" + F.hint + "</span>.";
+  $("drop-text").innerHTML = (matchMedia("(pointer: coarse)").matches ? "Tap to choose " : "Drop ") + (from === "jpg" ? "images" : "a file") + (matchMedia("(pointer: coarse)").matches ? ". Accepts " : " here. Accepts ") + "<span class=\"ext\">" + F.hint + "</span>.";
   $("pick").textContent = from === "jpg" ? "Choose images" : "Choose file";
   const list = $("files"); list.textContent = ""; list.hidden = !files.length;
   files.forEach((f, i) => {
@@ -943,7 +1079,7 @@ function refresh() {
     li.append(nm, sz, x); list.appendChild(li);
   });
   const ocr = from === "jpg" && (to === "xlsx" || to === "docx");
-  $("opt-ocr").hidden = !ocr; $("opt-lang").hidden = !(ocr && typeof claude === "undefined"); $("opt-dpi").hidden = to !== "jpg";
+  $("opt-ocr").hidden = !ocr; $("opt-lang").hidden = !((ocr || (from === "pdf" && (to === "xlsx" || to === "docx"))) && typeof claude === "undefined"); $("opt-dpi").hidden = to !== "jpg";
   $("opts").hidden = !ocr && to !== "jpg";
   $("go").disabled = busy || !files.length;
   $("go").textContent = "Convert to " + FORMATS[to].tag;
@@ -965,6 +1101,10 @@ function addFiles(list) {
 }
 
 /* ---------- conversion ---------- */
+
+const blocksHaveText = (bl) => bl.some((b) => (b.type === "p" && b.runs && b.runs.some((r) => (r.text || "").trim())) || (b.type === "h" && (b.text || "").trim()) || (b.type === "table" && b.rows && b.rows.some((r) => r.some((c) => String(c || "").trim()))));
+const sheetsHaveText = (sh) => sh.some((s) => s.rows && s.rows.some((r) => r.some((c) => String(c == null ? "" : c).trim())));
+async function pdfPagesAsFiles(pdf, prog) { const pages = await pdfToJpgs(pdf, 170, "scan", prog); return pages.map((p) => new File([p.blob], p.name, { type: "image/jpeg" })); }
 async function convert() {
   if (busy || !files.length) return;
   busy = true; resetResult(); WARN.length = 0; refresh(); setProgress(0, "Starting");
@@ -985,7 +1125,13 @@ async function convert() {
     } else if (to === "docx") {
       let bl;
       if (from === "xlsx") bl = sheetsToBlocks(sheets);
-      else if (from === "pdf") bl = await pdfToBlocks(pdf, prog);
+      else if (from === "pdf") {
+        bl = await pdfToBlocks(pdf, prog);
+        if (!blocksHaveText(bl) && typeof claude === "undefined") {
+          setProgress(0.3, "This PDF is a scan. Reading the text from the pages"); const pg = await pdfPagesAsFiles(pdf, prog); bl = [];
+          for (let i = 0; i < pg.length; i++) { setProgress(0.3 + 0.6 * i / pg.length, "Reading page " + (i + 1) + " of " + pg.length); if (i) bl.push({ type: "pb" }); bl.push(...ocrToBlocks(await ocrImage(pg[i], "doc"))); }
+        }
+      }
       else {
         bl = [];
         for (let i = 0; i < files.length; i++) {
@@ -1000,7 +1146,13 @@ async function convert() {
     } else if (to === "xlsx") {
       let sh, imgs = [];
       if (from === "docx") sh = blocksToSheets(blocks);
-      else if (from === "pdf") sh = await pdfToSheets(pdf, prog);
+      else if (from === "pdf") {
+        sh = await pdfToSheets(pdf, prog);
+        if (!sheetsHaveText(sh) && typeof claude === "undefined") {
+          setProgress(0.3, "This PDF is a scan. Reading the text from the pages"); const pg = await pdfPagesAsFiles(pdf, prog); sh = [];
+          for (let i = 0; i < pg.length; i++) { setProgress(0.3 + 0.6 * i / pg.length, "Reading page " + (i + 1) + " of " + pg.length); const t = ocrToSheets(await ocrImage(pg[i], "table")); t.forEach((s) => sh.push(pg.length > 1 ? { name: "P" + (i + 1) + " " + s.name, rows: s.rows } : s)); }
+        }
+      }
       else {
         sh = [];
         for (let i = 0; i < files.length; i++) {
@@ -1280,7 +1432,7 @@ async function runTool() {
         let blob, warn = "";
         if ($("r-mode").value === "smart" && isStandalone) {
           try { blob = await smartRemove(f, $("r-bg").value, part); }
-          catch (e) { warn = "Smart AI could not load (internet is needed the first time, and u2netp.onnx must be uploaded next to index.html). Used the plain method instead, which is weak on busy photos."; }
+          catch (e) { throw new Error("Smart AI could not start. Check that u2netp.onnx is uploaded next to index.html on GitHub and that internet is on the first time. Or choose Plain background for simple pictures."); }
         }
         if (!blob) {
           const bmp = await openBitmap(f); const r = removePlain(bmp, +$("r-str").value, $("r-bg").value); if (bmp.close) bmp.close();
@@ -1333,7 +1485,7 @@ async function tSample() {
   tfiles = [new File([await blobFromCanvas(c, "image/jpeg", 0.97)], "sample-photo.jpg", { type: "image/jpeg" })]; tReset(); tRefresh();
 }
 function setMode(m) {
-  const t = m === "tools"; $("view-convert").hidden = t; $("view-tools").hidden = !t;
+  const t = m === "tools"; document.body.classList.toggle("tools", t); document.querySelector("h1").textContent = t ? "What do you want to do with your photos?" : "What do you want to convert?"; document.querySelector(".band p").textContent = t ? "Make a photo smaller, or cut out the background." : "Pick the file you have, then the file you need."; $("view-convert").hidden = t; $("view-tools").hidden = !t;
   $("m-convert").setAttribute("aria-pressed", String(!t)); $("m-tools").setAttribute("aria-pressed", String(t)); window.scrollTo({ top: 0 });
 }
 $("m-convert").onclick = () => setMode("convert"); $("m-tools").onclick = () => setMode("tools");
@@ -1347,6 +1499,23 @@ const tdrop = $("t-drop");
 ["dragleave", "drop"].forEach((ev) => tdrop.addEventListener(ev, (e) => { e.preventDefault(); tdrop.classList.remove("over"); }));
 tdrop.addEventListener("drop", (e) => { if (!tbusy && e.dataTransfer) tAdd(e.dataTransfer.files); });
 tRefresh();
+/* ---------- install prompt ---------- */
+let installEv = null;
+const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+function showBar() { try { if (standalone() || sessionStorage.getItem("cd-bar-x")) return; } catch (e) { if (standalone()) return; } $("getapp").hidden = false; }
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEv = e; showBar(); });
+window.addEventListener("appinstalled", () => { $("getapp").hidden = true; });
+showBar();
+$("getapp-x").onclick = () => { $("getapp").hidden = true; try { sessionStorage.setItem("cd-bar-x", "1"); } catch (e) {} };
+$("getapp-go").onclick = async () => {
+  if (installEv) { installEv.prompt(); try { await installEv.userChoice; } catch (e) {} installEv = null; return; }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  $("sheet-body").innerHTML = ios
+    ? "<ol><li>Open this page in <b>Safari</b>.</li><li>Tap the <b>Share</b> button (square with an arrow).</li><li>Tap <b>Add to Home Screen</b>, then <b>Add</b>.</li></ol>"
+    : "<ol><li>Open this page in <b>Chrome</b>.</li><li>Tap the <b>⋮</b> menu at the top right.</li><li>Tap <b>Install app</b> (or <b>Add to Home screen</b>), then <b>Install</b>.</li></ol><p>If you do not see it, update Chrome and reload this page.</p>";
+  $("sheet").hidden = false;
+};
+$("sheet-ok").onclick = () => { $("sheet").hidden = true; };
 </script>
 <script>
 /* Turns Tesseract output into the same JSON shape the Claude reader returns. */
@@ -1413,16 +1582,47 @@ function loadTesseract() {
   if (!tessLoading) tessLoading = loadScript("https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js").catch((e) => { tessLoading = null; throw e; });
   return tessLoading;
 }
+/* image clean-up before reading text */
+function enhanceForOcr(src) {
+  const long = Math.max(src.width, src.height);
+  const k = Math.max(0.5, Math.min(3, 2400 / long));
+  const W = Math.round(src.width * k), H = Math.round(src.height * k);
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d", { willReadFrequently: true });
+  g.imageSmoothingQuality = "high"; g.fillStyle = "#fff"; g.fillRect(0, 0, W, H); g.drawImage(src, 0, 0, W, H);
+  const img = g.getImageData(0, 0, W, H), d = img.data, n = W * H, gray = new Float32Array(n);
+  for (let i = 0; i < n; i++) gray[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+  /* even out shadows: subtract a heavy blur (background estimate) */
+  const bg = boxBlur(gray, W, H, Math.max(15, Math.round(Math.min(W, H) / 30)));
+  const flat = new Float32Array(n); for (let i = 0; i < n; i++) flat[i] = Math.max(0, Math.min(255, gray[i] / Math.max(40, bg[i]) * 235));
+  /* stretch contrast using 1% and 99% */
+  const hist = new Uint32Array(256); for (let i = 0; i < n; i++) hist[Math.round(flat[i])]++;
+  let acc = 0, lo = 0, hi = 255; for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc >= n * 0.01) { lo = v; break; } }
+  acc = 0; for (let v = 255; v >= 0; v--) { acc += hist[v]; if (acc >= n * 0.01) { hi = v; break; } }
+  if (hi - lo < 30) { lo = 0; hi = 255; }
+  const sm = boxBlur(flat, W, H, 1);
+  const out = new Uint8ClampedArray(n * 4);
+  for (let i = 0; i < n; i++) { const v = Math.max(0, Math.min(255, (sm[i] - lo) * 255 / (hi - lo))); out[i * 4] = out[i * 4 + 1] = out[i * 4 + 2] = v; out[i * 4 + 3] = 255; }
+  const grayC = document.createElement("canvas"); grayC.width = W; grayC.height = H; grayC.getContext("2d").putImageData(new ImageData(out, W, H), 0, 0);
+  return { gray: grayC };
+}
+function boxBlur(a, W, H, r) {
+  const I = new Float64Array((W + 1) * (H + 1));
+  for (let y = 0; y < H; y++) { let row = 0; for (let x = 0; x < W; x++) { row += a[y * W + x]; I[(y + 1) * (W + 1) + x + 1] = I[y * (W + 1) + x + 1] + row; } }
+  const o = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) { const y0 = Math.max(0, y - r), y1 = Math.min(H, y + r + 1);
+    for (let x = 0; x < W; x++) { const x0 = Math.max(0, x - r), x1 = Math.min(W, x + r + 1);
+      o[y * W + x] = (I[y1 * (W + 1) + x1] - I[y0 * (W + 1) + x1] - I[y1 * (W + 1) + x0] + I[y0 * (W + 1) + x0]) / ((x1 - x0) * (y1 - y0)); } }
+  return o;
+}
+
 async function ocrLocal(file, mode) {
   setProgress(0.05, "Loading the text reader");
   await loadTesseract();
   const lang = ($("lang") && $("lang").value) || "eng";
   const im = await imageToCanvasJpeg(file);
-  let c = im.canvas; const MAX = 2600;
-  if (Math.max(c.width, c.height) > MAX) {
-    const s = MAX / Math.max(c.width, c.height), n = document.createElement("canvas");
-    n.width = Math.round(c.width * s); n.height = Math.round(c.height * s); n.getContext("2d").drawImage(c, 0, 0, n.width, n.height); c = n;
-  }
+  setProgress(0.1, "Cleaning the picture"); await tick();
+  const c = enhanceForOcr(im.canvas).gray;
   const worker = await Tesseract.createWorker(lang, 1, {
     logger: (m) => {
       if (m.status === "recognizing text") setProgress(0.2 + 0.7 * m.progress, "Reading text " + Math.round(m.progress * 100) + "%");
