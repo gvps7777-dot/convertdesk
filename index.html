@@ -59,8 +59,8 @@ body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); pa
 .band { background: var(--band); color: var(--band-ink); padding-block: calc(34px + env(safe-area-inset-top, 0px)) 84px; }
 .band-in { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 .brand { display: flex; align-items: center; gap: 12px; }
-.mark { width: 42px; height: 42px; border-radius: 11px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
-.mark svg { width: 24px; height: 24px; }
+.mark { width: 46px; height: 46px; border-radius: 12px; background: var(--accent); box-shadow: 0 0 0 2px rgba(255,255,255,.18); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.mark img { width: 100%; height: 100%; border-radius: 11px; display: block; object-fit: cover; }
 .brand b { font: 800 13px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--band-muted); font-weight: 600; }
 h1 { font: 800 38px/1.08 var(--display); letter-spacing: -.03em; margin: 0; text-wrap: balance; }
 .band p { margin: 0; color: var(--band-muted); max-width: 48ch; font-size: 16px; }
@@ -175,7 +175,7 @@ footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top
 <div class="band gut">
   <div class="band-in">
     <div class="brand">
-      <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13M13 4l4 4-4 4M20 16H7M11 12l-4 4 4 4"/></svg></div>
+      <div class="mark"><img src="icon-192.png" alt="" width="42" height="42"></div>
       <b>File converter</b>
     </div>
     <h1>Convert Desk</h1>
