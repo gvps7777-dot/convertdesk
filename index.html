@@ -1029,7 +1029,17 @@ async function convert() {
 }
 
 /* ---------- result ---------- */
+async function phoneSave(name, data) {
+  try {
+    if (navigator.canShare && matchMedia("(pointer: coarse)").matches) {
+      const file = new File([data], name, { type: data.type || "application/octet-stream" });
+      if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); return true; }
+    }
+  } catch (e) { if (e && e.name === "AbortError") return true; }
+  return false;
+}
 async function save(name, data) {
+  if (!downloads && await phoneSave(name, data)) return;
   if (!downloads) { const u = URL.createObjectURL(data), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); setStatus("Saved " + name); return; }
   try { await downloads.save({ filename: name, data }); setStatus("Saved " + name); }
   catch (e) { if (e && e.code !== "declined") setStatus("The file could not be saved (" + ((e && e.code) || "error") + ").", true); }
@@ -1122,6 +1132,7 @@ function tStatus(m, err) { const s = $("t-status"); s.hidden = !m; s.textContent
 function tProg(f, m) { $("t-bar").hidden = f == null; $("t-bar-i").style.width = Math.round((f || 0) * 100) + "%"; if (m) tStatus(m); }
 function tReset() { tUrls.forEach((u) => URL.revokeObjectURL(u)); tUrls = []; $("t-result").hidden = true; $("t-result").textContent = ""; }
 async function tSave(name, data) {
+  if (!downloads && await phoneSave(name, data)) return;
   if (!downloads) { const u = URL.createObjectURL(data), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); tStatus("Saved " + name); return; }
   try { await downloads.save({ filename: name, data }); tStatus("Saved " + name); }
   catch (e) { if (e && e.code !== "declined") tStatus("The file could not be saved.", true); }
@@ -1220,13 +1231,38 @@ function removePlain(bmp, strength, bgMode) {
   if (bgMode === "white") { const o = document.createElement("canvas"); o.width = W; o.height = H; const og = o.getContext("2d"); og.fillStyle = "#fff"; og.fillRect(0, 0, W, H); og.drawImage(c, 0, 0); return { canvas: o, frac }; }
   return { canvas: c, frac };
 }
-let imglyP = null;
+let ortP = null, ortSess = null;
+function loadOrt() {
+  if (ortP) return ortP;
+  const base = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.3/dist/";
+  ortP = new Promise((res, rej) => { const s = document.createElement("script"); s.src = base + "ort.min.js"; s.onload = () => { try { ort.env.wasm.wasmPaths = base; ort.env.wasm.numThreads = 1; ort.env.wasm.proxy = false; } catch (e) {} res(window.ort); }; s.onerror = () => { ortP = null; rej(new Error("ort")); }; document.head.appendChild(s); });
+  return ortP;
+}
 async function smartRemove(file, bgMode, prog) {
-  if (!imglyP) imglyP = import("https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm");
-  const mod = await imglyP;
-  const out = await mod.removeBackground(file, { progress: (key, cur, tot) => { if (tot) prog(cur / tot, /fetch/.test(key) ? "Downloading the AI model (first time only)" : "Working on the picture"); } });
-  if (bgMode !== "white") return out;
-  const bmp = await createImageBitmap(out), c = drawScaled(bmp, 0, "#ffffff"); return await blobFromCanvas(c, "image/png");
+  prog(0.1, "Loading the AI (first time only)");
+  const o = await loadOrt();
+  if (!ortSess) {
+    const r = await fetch("u2netp.onnx"); if (!r.ok) throw new Error("model");
+    ortSess = await o.InferenceSession.create(new Uint8Array(await r.arrayBuffer()), { executionProviders: ["wasm"] });
+  }
+  prog(0.5, "Finding the person or object");
+  const bmp = await openBitmap(file);
+  const S = 320, sc = document.createElement("canvas"); sc.width = S; sc.height = S;
+  const sg = sc.getContext("2d", { willReadFrequently: true }); sg.drawImage(bmp, 0, 0, S, S);
+  const px = sg.getImageData(0, 0, S, S).data, inp = new Float32Array(3 * S * S), mean = [0.485, 0.456, 0.406], sd = [0.229, 0.224, 0.225];
+  for (let i = 0; i < S * S; i++) for (let c = 0; c < 3; c++) inp[c * S * S + i] = (px[i * 4 + c] / 255 - mean[c]) / sd[c];
+  const out = await ortSess.run({ [ortSess.inputNames[0]]: new o.Tensor("float32", inp, [1, 3, S, S]) });
+  const m = out[ortSess.outputNames[0]].data; let lo = 1e9, hi = -1e9;
+  for (let i = 0; i < m.length; i++) { if (m[i] < lo) lo = m[i]; if (m[i] > hi) hi = m[i]; }
+  const mc = document.createElement("canvas"); mc.width = S; mc.height = S; const mg = mc.getContext("2d"), mi = mg.createImageData(S, S);
+  for (let i = 0; i < m.length; i++) { let v = (m[i] - lo) / (hi - lo + 1e-9); v = Math.max(0, Math.min(1, (v - 0.08) / 0.84)); v = v * v * (3 - 2 * v); mi.data[i * 4 + 3] = Math.round(v * 255); }
+  mg.putImageData(mi, 0, 0);
+  const c = drawScaled(bmp, 2400), g = c.getContext("2d");
+  g.imageSmoothingQuality = "high"; g.globalCompositeOperation = "destination-in"; g.drawImage(mc, 0, 0, c.width, c.height); g.globalCompositeOperation = "source-over";
+  if (bmp.close) bmp.close();
+  let res = c;
+  if (bgMode === "white") { res = document.createElement("canvas"); res.width = c.width; res.height = c.height; const rg = res.getContext("2d"); rg.fillStyle = "#fff"; rg.fillRect(0, 0, res.width, res.height); rg.drawImage(c, 0, 0); }
+  return await blobFromCanvas(res, "image/png");
 }
 async function runTool() {
   if (tbusy || !tfiles.length) return; tbusy = true; tReset(); tRefresh(); tStatus(""); tProg(0.02, "Starting");
@@ -1244,7 +1280,7 @@ async function runTool() {
         let blob, warn = "";
         if ($("r-mode").value === "smart" && isStandalone) {
           try { blob = await smartRemove(f, $("r-bg").value, part); }
-          catch (e) { warn = "Smart AI could not load (it needs internet the first time). Used the plain method instead."; }
+          catch (e) { warn = "Smart AI could not load (internet is needed the first time, and u2netp.onnx must be uploaded next to index.html). Used the plain method instead, which is weak on busy photos."; }
         }
         if (!blob) {
           const bmp = await openBitmap(f); const r = removePlain(bmp, +$("r-str").value, $("r-bg").value); if (bmp.close) bmp.close();
