@@ -306,13 +306,13 @@ footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top
           <div class="opt" id="r-mode-wrap">
             <label class="t" for="r-mode">Method</label>
             <select id="r-mode">
-              <option value="plain">Plain background (fast, works offline)</option>
-              <option value="smart" id="r-smart" hidden>Smart AI (photos, large first download)</option>
+              <option value="smart" id="r-smart" hidden>Smart AI (best, keeps the object safe)</option>
+              <option value="plain">Plain background (fast, offline)</option>
             </select>
           </div>
           <div class="opt" id="r-str-wrap">
             <label class="t" for="r-str">Strength</label>
-            <div class="range"><input type="range" id="r-str" min="10" max="100" step="2" value="38"><output id="r-str-out" for="r-str">38</output></div>
+            <div class="range"><input type="range" id="r-str" min="10" max="100" step="2" value="28"><output id="r-str-out" for="r-str">28</output></div>
             <span class="hint">Raise it if background is left behind. Lower it if the object is being cut.</span>
           </div>
           <div class="opt">
@@ -1063,10 +1063,19 @@ function showResult(outs, base) {
   }
   const again = document.createElement("button"); again.type = "button"; again.className = "btn ghost"; again.textContent = "Convert another";
   again.onclick = () => { files = []; resetResult(); setStatus(""); refresh(); window.scrollTo({ top: 0, behavior: "smooth" }); };
-  row.append(dl, again); box.appendChild(row);
+  row.append(dl, shareBtn(outs, setStatus), again); box.appendChild(row);
   box.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
+
+async function shareFiles(outs, st) {
+  try {
+    const fl = outs.map((o) => new File([o.blob], o.name, { type: o.blob.type || "application/octet-stream" }));
+    if (navigator.canShare && navigator.canShare({ files: fl })) await navigator.share({ files: fl, title: "Convert Desk" });
+    else st("Sharing is not supported in this browser. Use Download instead.", true);
+  } catch (e) { if (e && e.name !== "AbortError") st("Could not open Share. Use Download instead.", true); }
+}
+function shareBtn(outs, st) { const b = document.createElement("button"); b.type = "button"; b.className = "btn ghost"; b.textContent = "Share"; b.onclick = () => shareFiles(outs, st); return b; }
 /* ---------- samples ---------- */
 const SAMPLE_ROWS = [["Region", "Product", "Units", "Revenue"], ["North", "Desk lamp", "120", "2400.50"], ["North", "Notebook", "540", "1620"], ["South", "Desk lamp", "95", "1900.25"], ["South", "Notebook", "410", "1230"], ["West", "Desk lamp", "150", "3000"]];
 async function makeSample() {
@@ -1127,7 +1136,7 @@ function tRefresh() {
   });
   $("t-note").textContent = TOOLS[tool].note;
   $("t-opt-compress").hidden = tool !== "compress"; $("t-opt-cutout").hidden = tool !== "cutout";
-  $("r-smart").hidden = !isStandalone;
+  if ($("r-smart").hidden && isStandalone) { $("r-smart").hidden = false; $("r-mode").value = "smart"; }
   $("r-str-wrap").hidden = $("r-mode").value === "smart";
   const go = $("t-go"); go.textContent = TOOLS[tool].go; go.disabled = tbusy || !tfiles.length;
   const ul = $("t-files"); ul.textContent = ""; ul.hidden = !tfiles.length;
@@ -1190,12 +1199,13 @@ function removePlain(bmp, strength, bgMode) {
   const br = med(R), bgc = med(G), bb = med(B), thr = strength * 1.6;
   const dist = (i) => { const a = d[i] - br, b = d[i + 1] - bgc, e = d[i + 2] - bb; return Math.sqrt(a * a + b * b + e * e); };
   const gone = new Uint8Array(W * H), stack = new Int32Array(W * H); let sp = 0;
-  const push = (p) => { if (!gone[p] && dist(p * 4) <= thr) { gone[p] = 1; stack[sp++] = p; } };
-  for (let x = 0; x < W; x++) { push(x); push((H - 1) * W + x); }
-  for (let y = 0; y < H; y++) { push(y * W); push(y * W + W - 1); }
+  const nd = (p, q) => { const a = d[p * 4] - d[q * 4], b = d[p * 4 + 1] - d[q * 4 + 1], e = d[p * 4 + 2] - d[q * 4 + 2]; return Math.sqrt(a * a + b * b + e * e); };
+  const push = (p, from) => { if (!gone[p] && dist(p * 4) <= thr && (from < 0 || nd(p, from) <= thr * 0.45)) { gone[p] = 1; stack[sp++] = p; } };
+  for (let x = 0; x < W; x++) { push(x, -1); push((H - 1) * W + x, -1); }
+  for (let y = 0; y < H; y++) { push(y * W, -1); push(y * W + W - 1, -1); }
   while (sp) {
     const p = stack[--sp], x = p % W, y = (p / W) | 0;
-    if (x > 0) push(p - 1); if (x < W - 1) push(p + 1); if (y > 0) push(p - W); if (y < H - 1) push(p + W);
+    if (x > 0) push(p - 1, p); if (x < W - 1) push(p + 1, p); if (y > 0) push(p - W, p); if (y < H - 1) push(p + W, p);
   }
   let removed = 0;
   for (let p = 0; p < W * H; p++) {
@@ -1276,7 +1286,7 @@ function showToolResult(outs) {
   else { dl.textContent = "Download all as ZIP"; dl.onclick = async () => { await lib("jszip"); const z = new JSZip(); outs.forEach((o) => z.file(o.name, o.blob)); tSave("images-" + (tool === "compress" ? "compressed" : "nobg") + ".zip", await z.generateAsync({ type: "blob" })); }; }
   const again = document.createElement("button"); again.type = "button"; again.className = "btn ghost"; again.textContent = "Do more images";
   again.onclick = () => { tfiles = []; tReset(); tStatus(""); tRefresh(); window.scrollTo({ top: 0, behavior: "smooth" }); };
-  row.append(dl, again); box.appendChild(row); box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  row.append(dl, shareBtn(outs, tStatus), again); box.appendChild(row); box.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 async function tSample() {
   const c = document.createElement("canvas"); c.width = 1600; c.height = 1100; const g = c.getContext("2d");
