@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="Convert Desk">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
@@ -147,6 +147,19 @@ h1 { font: 800 38px/1.08 var(--display); letter-spacing: -.03em; margin: 0; text
 .trust div { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--muted); }
 .trust b { font-size: 14px; color: var(--ink); }
 footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top: 4px; }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.modes button { appearance: none; border: 0; background: transparent; color: var(--muted); font: 700 14px/1 var(--body); padding: 13px 8px; border-radius: 10px; cursor: pointer; min-height: 44px; }
+.modes button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.view { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.tiles.two { grid-template-columns: repeat(2, 1fr); }
+.tile[data-f="compress"] { --c: var(--docx); } .tile[data-f="cutout"] { --c: var(--xlsx); }
+.range { display: flex; align-items: center; gap: 12px; }
+.range input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); height: 28px; }
+.range output { font: 600 13px var(--mono); min-width: 4.2ch; text-align: right; }
+.opt input[type=number] { font: inherit; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); max-width: 100%; }
+.opt .hint { font-size: 12.5px; color: var(--muted); }
+.checker { background-color: #fff; background-image: linear-gradient(45deg, #d5dbe3 25%, transparent 25%, transparent 75%, #d5dbe3 75%), linear-gradient(45deg, #d5dbe3 25%, transparent 25%, transparent 75%, #d5dbe3 75%); background-size: 16px 16px; background-position: 0 0, 8px 8px; }
+.thumbs .gain { color: var(--xlsx); font-weight: 600; }
 [hidden] { display: none !important; }
 @media (prefers-reduced-motion: reduce) { .bar i, .tile { transition: none; } }
 @media (max-width: 480px) {
@@ -172,6 +185,11 @@ footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top
 </div>
 
 <div class="wrap gut">
+  <div class="modes" role="group" aria-label="Mode">
+    <button type="button" id="m-convert" aria-pressed="true">Convert files</button>
+    <button type="button" id="m-tools" aria-pressed="false">Image tools</button>
+  </div>
+  <div class="view" id="view-convert">
   <section class="panel" aria-label="Converter">
     <div class="step">
       <div class="step-h"><span class="num">1</span><h2 class="lab" id="lab-from">Convert from</h2></div>
@@ -210,9 +228,17 @@ footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top
             <option value="300">Print, 300 dpi</option>
           </select>
         </div>
+        <div class="opt" id="opt-lang" hidden>
+          <label class="t" for="lang">Language in the picture</label>
+          <select id="lang">
+            <option value="eng">English</option>
+            <option value="urd">Urdu</option>
+            <option value="eng+urd">English and Urdu</option>
+          </select>
+        </div>
         <label class="chk" id="opt-ocr" hidden for="ocr">
           <input type="checkbox" id="ocr" checked>
-          <span>Read the text in the image<small>The image is sent to Claude to read it. Turn this off to place the picture only.</small></span>
+          <span>Read the text in the image<small>The text is read on your phone. Turn this off to place the picture only.</small></span>
         </label>
       </div>
     </div>
@@ -226,13 +252,88 @@ footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top
   </section>
 
   <section class="panel result" id="result" hidden aria-label="Result"></section>
+  </div>
+
+  <div class="view" id="view-tools" hidden>
+    <section class="panel" aria-label="Image tools">
+      <div class="step">
+        <div class="step-h"><span class="num">1</span><h2 class="lab" id="lab-tool">Choose a tool</h2></div>
+        <div class="tiles two" id="t-tiles" role="group" aria-labelledby="lab-tool"></div>
+        <p class="note" id="t-note"></p>
+      </div>
+      <div class="step">
+        <div class="step-h"><span class="num">2</span><h2 class="lab">Add your images</h2></div>
+        <div class="drop" id="t-drop">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-9 9"/></svg>
+          <p>Drop images here. Accepts <span class="ext">.jpg, .png or .webp</span>.</p>
+          <div class="row" style="justify-content:center">
+            <label class="btn ghost" for="t-file">Choose images</label>
+            <button class="btn ghost" type="button" id="t-sample">Try a sample</button>
+          </div>
+          <input type="file" id="t-file" accept="image/*" multiple hidden>
+        </div>
+        <ul class="files" id="t-files" hidden></ul>
+      </div>
+      <div class="step">
+        <div class="step-h"><span class="num">3</span><h2 class="lab">Set it up and run</h2></div>
+        <div class="opts" id="t-opt-compress">
+          <div class="opt">
+            <label class="t" for="c-q">Quality</label>
+            <div class="range"><input type="range" id="c-q" min="30" max="95" step="5" value="70"><output id="c-q-out" for="c-q">70%</output></div>
+            <span class="hint">Lower quality makes a smaller file.</span>
+          </div>
+          <div class="opt">
+            <label class="t" for="c-side">Longest side</label>
+            <select id="c-side">
+              <option value="0">Keep original size</option>
+              <option value="2560">2560 px</option>
+              <option value="1920" selected>1920 px</option>
+              <option value="1280">1280 px</option>
+              <option value="800">800 px</option>
+            </select>
+          </div>
+          <div class="opt">
+            <label class="t" for="c-fmt">Save as</label>
+            <select id="c-fmt"><option value="jpg">JPG</option><option value="webp">WebP (smaller)</option></select>
+          </div>
+          <div class="opt">
+            <label class="t" for="c-kb">Target size in KB (optional)</label>
+            <input type="number" id="c-kb" inputmode="numeric" min="10" step="10" placeholder="For example 200">
+            <span class="hint">Set this to meet an upload limit. Quality is chosen for you.</span>
+          </div>
+        </div>
+        <div class="opts" id="t-opt-cutout" hidden>
+          <div class="opt" id="r-mode-wrap">
+            <label class="t" for="r-mode">Method</label>
+            <select id="r-mode">
+              <option value="plain">Plain background (fast, works offline)</option>
+              <option value="smart" id="r-smart" hidden>Smart AI (photos, large first download)</option>
+            </select>
+          </div>
+          <div class="opt" id="r-str-wrap">
+            <label class="t" for="r-str">Strength</label>
+            <div class="range"><input type="range" id="r-str" min="10" max="100" step="2" value="38"><output id="r-str-out" for="r-str">38</output></div>
+            <span class="hint">Raise it if background is left behind. Lower it if the object is being cut.</span>
+          </div>
+          <div class="opt">
+            <label class="t" for="r-bg">Result background</label>
+            <select id="r-bg"><option value="clear">Transparent (PNG)</option><option value="white">White (PNG)</option></select>
+          </div>
+        </div>
+        <button class="btn" id="t-go" type="button" disabled>Compress images</button>
+        <div class="bar" id="t-bar" hidden><i id="t-bar-i"></i></div>
+        <p class="status" id="t-status" role="status" aria-live="polite" hidden></p>
+      </div>
+    </section>
+    <section class="panel result" id="t-result" hidden aria-label="Result"></section>
+  </div>
 
   <div class="trust">
     <div><b>Private</b>Files are not uploaded anywhere.</div>
     <div><b>No sign-up</b>Nothing to install or pay for.</div>
     <div><b>Both ways</b>Excel, Word, PDF and JPG to each other.</div>
   </div>
-  <footer>The Word, Excel and PDF readers load from a public library host the first time you convert.</footer>
+  <footer>The Word, Excel, PDF and text readers load from a public library host the first time you use them.</footer>
 </div>
 <script>
 "use strict";
@@ -748,7 +849,7 @@ async function sheetsToXlsx(sheets, images) {
 async function ocrImage(file, mode) {
   const sample = typeof claude === "undefined" ? null : await claude.use("sample");
   const caps = sample ? await sample.limits().catch(() => null) : null;
-  if (!sample || !caps || !caps.images) throw new Error("Reading text from pictures is not available in this view. Turn off the text option to place the picture only.");
+  if (!sample || !caps || !caps.images) return ocrLocal(file, mode);
   let blob = file;
   if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) blob = await blobFromCanvas((await imageToCanvasJpeg(file)).canvas, "image/jpeg", 0.92);
   const prompt = mode === "table"
@@ -799,8 +900,8 @@ const NOTES = {
   "pdf>xlsx": "Text is placed in columns by its position on the page, one sheet per page. Needs a PDF with selectable text.",
   "pdf>docx": "Headings and text are rebuilt from the PDF. Page layout and pictures are not kept. Needs selectable text.",
   "pdf>jpg": "One JPG per page. Pick the image quality below.",
-  "jpg>xlsx": "The picture is placed on its own sheet in an Excel file.",
-  "jpg>docx": "The picture is placed on the page of a Word document.",
+  "jpg>xlsx": "The text and tables in the picture are read into sheets. With the option off, the picture is placed on its own sheet.",
+  "jpg>docx": "The text in the picture is read into a Word document. With the option off, the picture is placed on the page.",
   "jpg>pdf": "Each image becomes one page. Choose several images to make a multi-page PDF.",
 };
 let from = "xlsx", to = "pdf", files = [], busy = false, downloads = null, objectUrls = [], lastOuts = [];
@@ -841,8 +942,8 @@ function refresh() {
     x.onclick = () => { if (busy) return; files.splice(i, 1); refresh(); };
     li.append(nm, sz, x); list.appendChild(li);
   });
-  const ocr = false;
-  $("opt-ocr").hidden = !ocr; $("opt-dpi").hidden = to !== "jpg";
+  const ocr = from === "jpg" && (to === "xlsx" || to === "docx");
+  $("opt-ocr").hidden = !ocr; $("opt-lang").hidden = !(ocr && typeof claude === "undefined"); $("opt-dpi").hidden = to !== "jpg";
   $("opts").hidden = !ocr && to !== "jpg";
   $("go").disabled = busy || !files.length;
   $("go").textContent = "Convert to " + FORMATS[to].tag;
@@ -869,7 +970,7 @@ async function convert() {
   busy = true; resetResult(); WARN.length = 0; refresh(); setProgress(0, "Starting");
   const prog = (n, t, msg) => setProgress(n / t * 0.9, msg);
   try {
-    const base = baseName(files[0].name); const dpi = +$("dpi").value; const useOcr = false;
+    const base = baseName(files[0].name); const dpi = +$("dpi").value; const useOcr = $("ocr").checked;
     let outs = [];
     let sheets = null, blocks = null, pdf = null;
     setProgress(0.05, "Reading " + files[0].name);
@@ -1000,8 +1101,295 @@ const drop = $("drop");
 drop.addEventListener("drop", (e) => { if (!busy && e.dataTransfer) addFiles(e.dataTransfer.files); });
 refresh();
 (async () => { try { downloads = await claude.use("downloads"); } catch (e) { downloads = null; } })();
-</script>
 
+/* ---------- image tools: compress + background remover ---------- */
+const TOOLS = {
+  compress: { tag: "Compress", sub: "Smaller file", go: "Compress images", note: "Makes photos smaller so they upload and send faster. Pick a quality, or type a target size in KB." },
+  cutout: { tag: "Remove BG", sub: "Cut-out PNG", go: "Remove background", note: "Plain background works best: a wall, sheet or sky behind one object. It runs on your phone and nothing is uploaded." }
+};
+let tool = "compress", tfiles = [], tbusy = false, tUrls = [];
+const isStandalone = typeof claude === "undefined";
+function tStatus(m, err) { const s = $("t-status"); s.hidden = !m; s.textContent = m || ""; s.classList.toggle("err", !!err); }
+function tProg(f, m) { $("t-bar").hidden = f == null; $("t-bar-i").style.width = Math.round((f || 0) * 100) + "%"; if (m) tStatus(m); }
+function tReset() { tUrls.forEach((u) => URL.revokeObjectURL(u)); tUrls = []; $("t-result").hidden = true; $("t-result").textContent = ""; }
+async function tSave(name, data) {
+  if (!downloads) { const u = URL.createObjectURL(data), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); tStatus("Saved " + name); return; }
+  try { await downloads.save({ filename: name, data }); tStatus("Saved " + name); }
+  catch (e) { if (e && e.code !== "declined") tStatus("The file could not be saved.", true); }
+}
+function tRefresh() {
+  const t = $("t-tiles"); t.textContent = "";
+  Object.keys(TOOLS).forEach((k) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "tile"; b.dataset.f = k; b.setAttribute("aria-pressed", String(k === tool));
+    b.innerHTML = "<b></b><span></span>"; b.firstChild.textContent = TOOLS[k].tag; b.lastChild.textContent = TOOLS[k].sub;
+    b.onclick = () => { if (tbusy) return; tool = k; tReset(); tStatus(""); tRefresh(); };
+    t.appendChild(b);
+  });
+  $("t-note").textContent = TOOLS[tool].note;
+  $("t-opt-compress").hidden = tool !== "compress"; $("t-opt-cutout").hidden = tool !== "cutout";
+  $("r-smart").hidden = !isStandalone;
+  $("r-str-wrap").hidden = $("r-mode").value === "smart";
+  const go = $("t-go"); go.textContent = TOOLS[tool].go; go.disabled = tbusy || !tfiles.length;
+  const ul = $("t-files"); ul.textContent = ""; ul.hidden = !tfiles.length;
+  tfiles.forEach((f, i) => {
+    const li = document.createElement("li");
+    const n = document.createElement("span"); n.className = "nm"; n.textContent = f.name;
+    const s = document.createElement("span"); s.className = "sz"; s.textContent = fmtSize(f.size);
+    const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.setAttribute("aria-label", "Remove " + f.name);
+    x.onclick = () => { if (tbusy) return; tfiles.splice(i, 1); tRefresh(); };
+    li.append(n, s, x); ul.appendChild(li);
+  });
+}
+function tAdd(list) {
+  for (const f of Array.from(list)) {
+    if (!/^image\//.test(f.type) && !/\.(jpe?g|png|webp)$/i.test(f.name)) { tStatus("“" + f.name + "” is not an image.", true); continue; }
+    tfiles.push(f);
+  }
+  tReset(); tRefresh();
+}
+async function openBitmap(file) {
+  if (window.createImageBitmap) { try { return await createImageBitmap(file, { imageOrientation: "from-image" }); } catch (e) { /* fall through */ } }
+  const u = URL.createObjectURL(file);
+  try { return await loadImage(u); } finally { URL.revokeObjectURL(u); }
+}
+function bmpSize(b) { return { w: b.naturalWidth || b.width, h: b.naturalHeight || b.height }; }
+function drawScaled(bmp, maxSide, bg) {
+  const { w, h } = bmpSize(bmp); const k = maxSide && Math.max(w, h) > maxSide ? maxSide / Math.max(w, h) : 1;
+  const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+  const g = c.getContext("2d"); if (bg) { g.fillStyle = bg; g.fillRect(0, 0, c.width, c.height); }
+  g.imageSmoothingQuality = "high"; g.drawImage(bmp, 0, 0, c.width, c.height); return c;
+}
+async function compressOne(file, opt) {
+  const bmp = await openBitmap(file);
+  let side = opt.side, mime = opt.fmt === "webp" ? "image/webp" : "image/jpeg";
+  let c = drawScaled(bmp, side, "#ffffff"), q = opt.q / 100;
+  let blob = await blobFromCanvas(c, mime, q);
+  if (blob && blob.type !== mime) { mime = "image/jpeg"; blob = await blobFromCanvas(c, mime, q); }
+  if (opt.kb) {
+    const target = opt.kb * 1024;
+    for (let round = 0; round < 6 && blob.size > target; round++) {
+      let lo = 0.2, hi = q, best = null;
+      for (let i = 0; i < 7; i++) { const m = (lo + hi) / 2; const b = await blobFromCanvas(c, mime, m); if (b.size <= target) { best = b; lo = m; } else hi = m; }
+      if (best) { blob = best; break; }
+      const s = Math.max(c.width, c.height) * 0.8; if (s < 200) break; c = drawScaled(bmp, s, "#ffffff"); blob = await blobFromCanvas(c, mime, 0.6); q = 0.6;
+    }
+  }
+  if (bmp.close) bmp.close();
+  return { blob, ext: mime === "image/webp" ? "webp" : "jpg" };
+}
+/* plain-background remover: flood fill from the edges using the edge colour */
+function removePlain(bmp, strength, bgMode) {
+  const c = drawScaled(bmp, 2400); const W = c.width, H = c.height; const g = c.getContext("2d", { willReadFrequently: true });
+  const img = g.getImageData(0, 0, W, H), d = img.data;
+  const med = (a) => { a.sort((x, y) => x - y); return a[a.length >> 1]; };
+  const R = [], G = [], B = [];
+  const take = (x, y) => { const i = (y * W + x) * 4; R.push(d[i]); G.push(d[i + 1]); B.push(d[i + 2]); };
+  const step = Math.max(1, Math.floor(Math.max(W, H) / 400));
+  for (let x = 0; x < W; x += step) { take(x, 0); take(x, H - 1); }
+  for (let y = 0; y < H; y += step) { take(0, y); take(W - 1, y); }
+  const br = med(R), bgc = med(G), bb = med(B), thr = strength * 1.6;
+  const dist = (i) => { const a = d[i] - br, b = d[i + 1] - bgc, e = d[i + 2] - bb; return Math.sqrt(a * a + b * b + e * e); };
+  const gone = new Uint8Array(W * H), stack = new Int32Array(W * H); let sp = 0;
+  const push = (p) => { if (!gone[p] && dist(p * 4) <= thr) { gone[p] = 1; stack[sp++] = p; } };
+  for (let x = 0; x < W; x++) { push(x); push((H - 1) * W + x); }
+  for (let y = 0; y < H; y++) { push(y * W); push(y * W + W - 1); }
+  while (sp) {
+    const p = stack[--sp], x = p % W, y = (p / W) | 0;
+    if (x > 0) push(p - 1); if (x < W - 1) push(p + 1); if (y > 0) push(p - W); if (y < H - 1) push(p + W);
+  }
+  let removed = 0;
+  for (let p = 0; p < W * H; p++) {
+    if (gone[p]) { d[p * 4 + 3] = 0; removed++; continue; }
+    const x = p % W, y = (p / W) | 0;
+    if ((x > 0 && gone[p - 1]) || (x < W - 1 && gone[p + 1]) || (y > 0 && gone[p - W]) || (y < H - 1 && gone[p + W])) {
+      const a = Math.max(0, Math.min(1, (dist(p * 4) - thr * 0.5) / (thr * 0.5))); d[p * 4 + 3] = Math.round(255 * a);
+    }
+  }
+  g.putImageData(img, 0, 0);
+  const frac = removed / (W * H);
+  if (bgMode === "white") { const o = document.createElement("canvas"); o.width = W; o.height = H; const og = o.getContext("2d"); og.fillStyle = "#fff"; og.fillRect(0, 0, W, H); og.drawImage(c, 0, 0); return { canvas: o, frac }; }
+  return { canvas: c, frac };
+}
+let imglyP = null;
+async function smartRemove(file, bgMode, prog) {
+  if (!imglyP) imglyP = import("https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm");
+  const mod = await imglyP;
+  const out = await mod.removeBackground(file, { progress: (key, cur, tot) => { if (tot) prog(cur / tot, /fetch/.test(key) ? "Downloading the AI model (first time only)" : "Working on the picture"); } });
+  if (bgMode !== "white") return out;
+  const bmp = await createImageBitmap(out), c = drawScaled(bmp, 0, "#ffffff"); return await blobFromCanvas(c, "image/png");
+}
+async function runTool() {
+  if (tbusy || !tfiles.length) return; tbusy = true; tReset(); tRefresh(); tStatus(""); tProg(0.02, "Starting");
+  const outs = [];
+  try {
+    for (let i = 0; i < tfiles.length; i++) {
+      const f = tfiles[i], base = baseName(f.name), part = (v, m) => tProg((i + v) / tfiles.length, (tfiles.length > 1 ? "Image " + (i + 1) + " of " + tfiles.length + ". " : "") + m);
+      part(0.1, tool === "compress" ? "Compressing" : "Removing the background");
+      await tick();
+      if (tool === "compress") {
+        const kb = parseInt($("c-kb").value, 10);
+        const r = await compressOne(f, { q: +$("c-q").value, side: +$("c-side").value, fmt: $("c-fmt").value, kb: kb > 0 ? kb : 0 });
+        outs.push({ name: base + "-compressed." + r.ext, blob: r.blob, before: f.size });
+      } else {
+        let blob, warn = "";
+        if ($("r-mode").value === "smart" && isStandalone) {
+          try { blob = await smartRemove(f, $("r-bg").value, part); }
+          catch (e) { warn = "Smart AI could not load (it needs internet the first time). Used the plain method instead."; }
+        }
+        if (!blob) {
+          const bmp = await openBitmap(f); const r = removePlain(bmp, +$("r-str").value, $("r-bg").value); if (bmp.close) bmp.close();
+          blob = await blobFromCanvas(r.canvas, "image/png");
+          if (r.frac < 0.02) warn = warn || "Almost nothing was removed. Raise Strength or use a picture with a plainer background.";
+          else if (r.frac > 0.97) warn = warn || "Almost everything was removed. Lower Strength.";
+        }
+        outs.push({ name: base + "-nobg.png", blob, before: f.size, warn, cut: true });
+      }
+      await tick();
+    }
+    tProg(1, "Done"); showToolResult(outs);
+    setTimeout(() => { tProg(null); tStatus(""); }, 400);
+  } catch (e) { tProg(null); tStatus((e && e.message) || "That did not work. Try another image.", true); }
+  finally { tbusy = false; tRefresh(); }
+}
+function showToolResult(outs) {
+  const box = $("t-result"); box.textContent = ""; box.hidden = false;
+  const head = document.createElement("div"); head.className = "res-head";
+  const t = document.createElement("span"); t.className = "res-tag"; t.style.setProperty("--c", tool === "compress" ? "var(--docx)" : "var(--xlsx)"); t.textContent = TOOLS[tool].tag;
+  const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = outs.length === 1 ? outs[0].name : outs.length + " images ready";
+  const after = outs.reduce((a, o) => a + o.blob.size, 0), before = outs.reduce((a, o) => a + o.before, 0);
+  const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = tool === "compress" ? fmtSize(before) + " → " + fmtSize(after) : fmtSize(after);
+  head.append(t, nm, meta); box.appendChild(head);
+  outs.forEach((o) => { if (o.warn) { const p = document.createElement("p"); p.className = "note"; p.textContent = o.warn; box.appendChild(p); } });
+  const grid = document.createElement("div"); grid.className = "thumbs";
+  outs.forEach((o) => {
+    const u = URL.createObjectURL(o.blob); tUrls.push(u);
+    const fig = document.createElement("figure"); const im = document.createElement("img"); im.src = u; im.alt = o.name; if (o.cut) im.className = "checker";
+    const cap = document.createElement("figcaption"); const s = document.createElement("span"); s.textContent = fmtSize(o.blob.size);
+    if (tool === "compress" && o.before) { const pc = Math.round((1 - o.blob.size / o.before) * 100); if (pc > 0) { const gn = document.createElement("span"); gn.className = "gain"; gn.textContent = "−" + pc + "%"; s.append(" ", gn); } }
+    const b = document.createElement("button"); b.type = "button"; b.className = "link"; b.textContent = "Save"; b.onclick = () => tSave(o.name, o.blob);
+    cap.append(s, b); fig.append(im, cap); grid.appendChild(fig);
+  });
+  box.appendChild(grid);
+  const row = document.createElement("div"); row.className = "row";
+  const dl = document.createElement("button"); dl.type = "button"; dl.className = "btn";
+  if (outs.length === 1) { dl.textContent = "Download " + outs[0].name; dl.onclick = () => tSave(outs[0].name, outs[0].blob); }
+  else { dl.textContent = "Download all as ZIP"; dl.onclick = async () => { await lib("jszip"); const z = new JSZip(); outs.forEach((o) => z.file(o.name, o.blob)); tSave("images-" + (tool === "compress" ? "compressed" : "nobg") + ".zip", await z.generateAsync({ type: "blob" })); }; }
+  const again = document.createElement("button"); again.type = "button"; again.className = "btn ghost"; again.textContent = "Do more images";
+  again.onclick = () => { tfiles = []; tReset(); tStatus(""); tRefresh(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  row.append(dl, again); box.appendChild(row); box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+async function tSample() {
+  const c = document.createElement("canvas"); c.width = 1600; c.height = 1100; const g = c.getContext("2d");
+  const gr = g.createLinearGradient(0, 0, 0, 1100); gr.addColorStop(0, "#dfe9f3"); gr.addColorStop(1, "#eef2f6"); g.fillStyle = gr; g.fillRect(0, 0, 1600, 1100);
+  for (let i = 0; i < 9000; i++) { g.fillStyle = "rgba(" + (120 + Math.random() * 120 | 0) + "," + (120 + Math.random() * 120 | 0) + ",255,.05)"; g.fillRect(Math.random() * 1600, Math.random() * 1100, 3, 3); }
+  g.fillStyle = "#e4572e"; g.beginPath(); g.arc(800, 560, 330, 0, 7); g.fill();
+  g.fillStyle = "#1f5eff"; g.fillRect(640, 400, 320, 320); g.fillStyle = "#ffd23f"; g.beginPath(); g.arc(800, 560, 90, 0, 7); g.fill();
+  tfiles = [new File([await blobFromCanvas(c, "image/jpeg", 0.97)], "sample-photo.jpg", { type: "image/jpeg" })]; tReset(); tRefresh();
+}
+function setMode(m) {
+  const t = m === "tools"; $("view-convert").hidden = t; $("view-tools").hidden = !t;
+  $("m-convert").setAttribute("aria-pressed", String(!t)); $("m-tools").setAttribute("aria-pressed", String(t)); window.scrollTo({ top: 0 });
+}
+$("m-convert").onclick = () => setMode("convert"); $("m-tools").onclick = () => setMode("tools");
+$("t-file").onchange = (e) => { tAdd(e.target.files); e.target.value = ""; };
+$("t-go").onclick = runTool; $("t-sample").onclick = tSample;
+$("c-q").oninput = () => { $("c-q-out").textContent = $("c-q").value + "%"; };
+$("r-str").oninput = () => { $("r-str-out").textContent = $("r-str").value; };
+$("r-mode").onchange = tRefresh;
+const tdrop = $("t-drop");
+["dragenter", "dragover"].forEach((ev) => tdrop.addEventListener(ev, (e) => { e.preventDefault(); tdrop.classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) => tdrop.addEventListener(ev, (e) => { e.preventDefault(); tdrop.classList.remove("over"); }));
+tdrop.addEventListener("drop", (e) => { if (!tbusy && e.dataTransfer) tAdd(e.dataTransfer.files); });
+tRefresh();
+</script>
+<script>
+/* Turns Tesseract output into the same JSON shape the Claude reader returns. */
+function ocrShape(data, lang, mode) {
+  const rtl = /urd/.test(lang);
+  let lines = (data.lines || []).map((l) => ({
+    text: String(l.text || "").replace(/\s+/g, " ").trim(),
+    x0: l.bbox.x0, y0: l.bbox.y0, y1: l.bbox.y1,
+    words: (l.words || []).filter((w) => String(w.text || "").trim()),
+  })).filter((l) => l.text);
+  if (!lines.length) {
+    lines = String(data.text || "").split("\n").map((s) => s.trim()).filter(Boolean).map((s, i) => ({ text: s, x0: 0, y0: i * 24, y1: i * 24 + 18, words: [] }));
+  }
+  if (!lines.length) return mode === "table" ? { tables: [] } : { blocks: [] };
+  const heights = lines.map((l) => l.y1 - l.y0).sort((a, b) => a - b);
+  const med = Math.max(8, heights[Math.floor(heights.length / 2)] || 16);
+  const cellsOf = (l) => {
+    if (rtl || !l.words.length) return [{ s: l.text, x: l.x0 }];
+    const h = Math.max(8, l.y1 - l.y0), cells = []; let cur = null;
+    l.words.forEach((w) => {
+      const t = String(w.text).trim();
+      if (cur && w.bbox.x0 - cur.end <= h * 1.1) { cur.s += " " + t; cur.end = w.bbox.x1; }
+      else { cur = { s: t, x: w.bbox.x0, end: w.bbox.x1 }; cells.push(cur); }
+    });
+    return cells;
+  };
+  const gridFrom = (cellRows) => {
+    const tol = med * 1.3, xs = [];
+    cellRows.forEach((cs) => cs.forEach((c) => xs.push(c.x)));
+    xs.sort((a, b) => a - b);
+    const groups = [];
+    xs.forEach((x) => { const g = groups[groups.length - 1]; if (g && x - g.last <= tol) { g.sum += x; g.n++; g.last = x; } else groups.push({ sum: x, n: 1, last: x }); });
+    const cols = groups.map((g) => g.sum / g.n);
+    const colOf = (x) => { let b = 0, d = 1e9; cols.forEach((c, i) => { const dd = Math.abs(c - x); if (dd < d) { d = dd; b = i; } }); return b; };
+    const rows = cellRows.map((cs) => { const r = new Array(cols.length).fill(""); cs.forEach((c) => { const i = colOf(c.x); r[i] = r[i] ? r[i] + " " + c.s : c.s; }); return r; });
+    let w = 0; rows.forEach((r) => r.forEach((v, i) => { if (v !== "") w = Math.max(w, i + 1); }));
+    return rows.map((r) => r.slice(0, w));
+  };
+  if (mode === "table") {
+    const cr = lines.map(cellsOf);
+    const multi = cr.filter((c) => c.length >= 2).length;
+    return { tables: [{ name: multi >= 2 ? "Table" : "Text", rows: multi >= 2 ? gridFrom(cr) : lines.map((l) => [l.text]) }] };
+  }
+  const blocks = []; let para = null, prev = null, tbl = null;
+  const flushPara = () => { if (para) { const t = para.text.replace(/\s+/g, " ").trim(); if (t) blocks.push(para.level ? { type: "h", level: para.level, text: t } : { type: "p", text: t }); para = null; } };
+  const flushTbl = () => { if (tbl) { const rows = gridFrom(tbl); if (rows.length) blocks.push({ type: "table", rows }); tbl = null; } };
+  lines.forEach((l) => {
+    const cs = cellsOf(l);
+    if (cs.length >= 2) { flushPara(); (tbl = tbl || []).push(cs); prev = l; return; }
+    flushTbl();
+    const h = l.y1 - l.y0, level = h >= med * 1.6 ? 1 : h >= med * 1.3 ? 2 : 0;
+    const gap = prev ? l.y0 - prev.y1 : 0;
+    if (!para || level || para.level || gap > med * 0.9) { flushPara(); para = { text: l.text, level }; } else para.text += " " + l.text;
+    prev = l;
+  });
+  flushPara(); flushTbl();
+  return { blocks };
+}
+
+/* Reads text on the phone with Tesseract when Claude is not available. */
+let tessLoading = null;
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve();
+  if (!tessLoading) tessLoading = loadScript("https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js").catch((e) => { tessLoading = null; throw e; });
+  return tessLoading;
+}
+async function ocrLocal(file, mode) {
+  setProgress(0.05, "Loading the text reader");
+  await loadTesseract();
+  const lang = ($("lang") && $("lang").value) || "eng";
+  const im = await imageToCanvasJpeg(file);
+  let c = im.canvas; const MAX = 2600;
+  if (Math.max(c.width, c.height) > MAX) {
+    const s = MAX / Math.max(c.width, c.height), n = document.createElement("canvas");
+    n.width = Math.round(c.width * s); n.height = Math.round(c.height * s); n.getContext("2d").drawImage(c, 0, 0, n.width, n.height); c = n;
+  }
+  const worker = await Tesseract.createWorker(lang, 1, {
+    logger: (m) => {
+      if (m.status === "recognizing text") setProgress(0.2 + 0.7 * m.progress, "Reading text " + Math.round(m.progress * 100) + "%");
+      else if (m.status) setProgress(0.1, "Preparing: " + m.status);
+    },
+  });
+  let data;
+  try { ({ data } = await worker.recognize(c)); }
+  catch (e) { throw new Error("The text in the picture could not be read. Try a clearer picture, or turn off the text option."); }
+  finally { try { await worker.terminate(); } catch (e) {} }
+  return ocrShape(data, lang, mode);
+}
+</script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body>
 </html>
