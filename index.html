@@ -151,8 +151,8 @@ footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top
 .modes button { appearance: none; border: 0; background: transparent; color: var(--muted); font: 700 14px/1 var(--body); padding: 13px 8px; border-radius: 10px; cursor: pointer; min-height: 44px; }
 .modes button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
 .view { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
-.tiles.two { grid-template-columns: repeat(2, 1fr); }
-.tile[data-f="compress"] { --c: var(--docx); } .tile[data-f="cutout"] { --c: var(--xlsx); }
+.tiles.two { grid-template-columns: repeat(3, 1fr); }
+.tile[data-f="hand"] { --c: var(--pdf); } .tile[data-f="compress"] { --c: var(--docx); } .tile[data-f="cutout"] { --c: var(--xlsx); }
 .range { display: flex; align-items: center; gap: 12px; }
 .range input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); height: 28px; }
 .range output { font: 600 13px var(--mono); min-width: 4.2ch; text-align: right; }
@@ -230,7 +230,7 @@ h1 { font: 800 31px/1.08 var(--display); letter-spacing: -.035em; color: var(--i
 .tile[aria-pressed="true"] b, .tile[aria-pressed="true"] span { color: var(--on-fmt); }
 .tile[aria-pressed="true"]::after { background: rgba(255,255,255,.35); }
 .tile[aria-pressed="true"]::before { background: linear-gradient(225deg, var(--surface) 50%, rgba(255,255,255,.35) 50%); }
-.tiles.two .tile { aspect-ratio: 16 / 9; align-items: flex-start; padding: 12px 14px; justify-content: flex-end; }
+.tiles.two .tile { aspect-ratio: 1 / 1; align-items: flex-start; padding: 10px; justify-content: flex-end; } .tiles.two .tile b { font-size: 14.5px; } .tiles.two .tile span { font-size: 11px; }
 .tile:disabled { opacity: .28; }
 .swap { border-radius: 999px; font-weight: 700; }
 .note { background: var(--soft); border: 0; border-left: 3px solid var(--to-c); border-radius: 4px 12px 12px 4px; color: var(--ink); font-size: 14px; }
@@ -433,6 +433,23 @@ body.tools .route { display: none; } body.tools .band.gut { padding-bottom: 56px
             <span class="hint">Set this to meet an upload limit. Quality is chosen for you.</span>
           </div>
         </div>
+        <div class="opts" id="t-opt-hand" hidden>
+          <div class="opt">
+            <label class="t" for="h-key">AI reader key</label>
+            <input type="password" id="h-key" autocomplete="off" placeholder="Paste your key here (needed once)">
+            <span class="hint">Free key: open aistudio.google.com/app/apikey, sign in, tap Create API key, then paste it here. The picture is sent to Google to be read.</span>
+          </div>
+          <div class="opt">
+            <label class="t" for="h-rot">Photo direction</label>
+            <select id="h-rot"><option value="0">As it is</option><option value="90">Turn right</option><option value="270">Turn left</option><option value="180">Upside down</option></select>
+            <img id="h-prev" alt="Preview" style="max-width:100%;max-height:240px;border-radius:10px;border:1px solid var(--line);align-self:flex-start" hidden>
+            <span class="hint">If the page is sideways, turn it so the writing is upright. The preview shows how it will be read.</span>
+          </div>
+          <div class="opt">
+            <label class="t" for="h-out">Make</label>
+            <select id="h-out"><option value="xlsx">Excel table</option><option value="docx">Word document</option></select>
+          </div>
+        </div>
         <div class="opts" id="t-opt-cutout" hidden>
           <div class="opt" id="r-mode-wrap">
             <label class="t" for="r-mode">Method</label>
@@ -464,7 +481,7 @@ body.tools .route { display: none; } body.tools .band.gut { padding-bottom: 56px
     <div><b>Free</b>No sign-up needed</div>
     <div><b>Both ways</b>All four formats</div>
   </div>
-  <footer>Your files never leave your device. Readers load from a public library the first time you use them, so connect to the internet once.</footer>
+  <footer>Your files stay on your device, except pictures you read with the AI reader key. Readers load from a public library the first time you use them, so connect to the internet once.</footer>
 </div>
 <script>
 "use strict";
@@ -979,14 +996,19 @@ async function sheetsToXlsx(sheets, images) {
 /* ---------- Image -> text through Claude ---------- */
 
 function ocrPrompt(mode) {
+  if (mode === "register") return 'This is a photo of a handwritten register or table. It may be sideways or tilted, so read it in the upright direction. Reply with only JSON: {"tables":[{"name":"short sheet name","rows":[["cell","cell"]]}]}. Include the header rows. Keep one row per line of the page and keep the same column order. Write each cell exactly as handwritten, for example times like 7:55. Use an empty string for a blank cell. If a cell only has a signature or scribble, write "Signed". Keep notes such as Sunday or C-Leave as written. Never invent values. If a value is unclear, add a question mark after it. Every cell is a string.';
   const prompt = mode === "table"
     ? 'This image shows a table, spreadsheet or document. Transcribe it exactly as printed. Reply with only JSON: {"tables":[{"name":"short sheet name","rows":[["cell","cell"]]}]}. Use one table per distinct table in the image, every cell a string. If the image has no table, return one table named "Text" with one line of text per row. Do not add, correct or summarise anything.'
     : 'This image shows a document. Transcribe it exactly as printed, in reading order. Reply with only JSON: {"blocks":[{"type":"h","level":1,"text":"heading"},{"type":"p","text":"paragraph"},{"type":"table","rows":[["cell","cell"]]}]}. Heading level is 1, 2 or 3. Do not add, correct or summarise anything.';
-  return prompt + " The text may be handwritten, so read it carefully. Keep the same rows and columns as the page. Leave a cell as an empty string if it is blank. Do not invent text.";
+  return (mode === "register" ? prompt : prompt) + " The text may be handwritten, so read it carefully. Keep the same rows and columns as the page. Leave a cell as an empty string if it is blank. Do not invent text.";
 }
+window.setProgressFn = (n, m) => setProgress(n, m);
 function getAiKey() { try { return (localStorage.getItem("cd-aikey") || "").trim(); } catch (e) { return ""; } }
 function blobToB64(b) { return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(",")[1]); fr.onerror = rej; fr.readAsDataURL(b); }); }
 async function ocrGemini(file, mode, key) {
+  const setProgress = (n, m) => (window.__tp ? tProg : window.setProgressFn)(n, m);
+  key = String(key || "").replace(/[\s"'`]/g, "");
+  if (!/^AIza[0-9A-Za-z_-]{35}$/.test(key)) throw new Error("This does not look like a Google AI key. A real key starts with AIza and has 39 characters. What you pasted has " + key.length + " characters and starts with \"" + key.slice(0, 4) + "\". Open the key in AI Studio and copy the whole key again.");
   setProgress(0.15, "Preparing the picture");
   const im = await imageToCanvasJpeg(file); let c = im.canvas; const MAX = 2000;
   if (Math.max(c.width, c.height) > MAX) { const s = MAX / Math.max(c.width, c.height), n = document.createElement("canvas"); n.width = Math.round(c.width * s); n.height = Math.round(c.height * s); n.getContext("2d").drawImage(c, 0, 0, n.width, n.height); c = n; }
@@ -997,7 +1019,7 @@ async function ocrGemini(file, mode, key) {
     setProgress(0.4, "Reading with the AI reader");
     let r; try { r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(key), { method: "POST", headers: { "Content-Type": "application/json" }, body }); }
     catch (e) { throw new Error("No internet connection to the AI reader. Check your internet and try again."); }
-    if (r.status === 400 || r.status === 403) { let t = ""; try { t = (await r.json()).error.message; } catch (e) {} if (/API key|API_KEY|permission/i.test(t)) throw new Error("The AI key is not accepted. Check that you pasted the whole key."); lastErr = t || "HTTP " + r.status; continue; }
+    if (r.status === 400 || r.status === 403) { let t = ""; try { t = (await r.json()).error.message; } catch (e) {} if (/API key|API_KEY|permission|referer|blocked|not been used|disabled/i.test(t)) throw new Error("Google did not accept the key: " + t.slice(0, 220)); lastErr = t || "HTTP " + r.status; continue; }
     if (r.status === 404) { lastErr = "model not found"; continue; }
     if (r.status === 429) throw new Error("The free AI limit is used up for now. Wait a minute and try again.");
     if (!r.ok) { lastErr = "HTTP " + r.status; continue; }
@@ -1313,6 +1335,7 @@ refresh();
 /* ---------- image tools: compress + background remover ---------- */
 const TOOLS = {
   compress: { tag: "Compress", sub: "Smaller file", go: "Compress images", note: "Makes photos smaller so they upload and send faster. Pick a quality, or type a target size in KB." },
+  hand: { tag: "Handwriting", sub: "Photo to Excel", go: "Read handwriting", note: "Reads a handwritten page or register (like attendance) into Excel or Word. Needs the free AI key below. Turn the photo upright first." },
   cutout: { tag: "Remove BG", sub: "Cut-out PNG", go: "Remove background", note: "Plain background works best: a wall, sheet or sky behind one object. It runs on your phone and nothing is uploaded." }
 };
 let tool = "compress", tfiles = [], tbusy = false, tUrls = [];
@@ -1335,7 +1358,7 @@ function tRefresh() {
     t.appendChild(b);
   });
   $("t-note").textContent = TOOLS[tool].note;
-  $("t-opt-compress").hidden = tool !== "compress"; $("t-opt-cutout").hidden = tool !== "cutout";
+  $("t-opt-compress").hidden = tool !== "compress"; $("t-opt-cutout").hidden = tool !== "cutout"; $("t-opt-hand").hidden = tool !== "hand"; if (tool === "hand") hPreview();
   if ($("r-smart").hidden && isStandalone) { $("r-smart").hidden = false; $("r-mode").value = "smart"; }
   $("r-str-wrap").hidden = $("r-mode").value === "smart";
   const go = $("t-go"); go.textContent = TOOLS[tool].go; go.disabled = tbusy || !tfiles.length;
@@ -1454,7 +1477,9 @@ async function smartRemove(file, bgMode, prog) {
   return await blobFromCanvas(res, "image/png");
 }
 async function runTool() {
-  if (tbusy || !tfiles.length) return; tbusy = true; tReset(); tRefresh(); tStatus(""); tProg(0.02, "Starting");
+  if (tbusy || !tfiles.length) return;
+  if (tool === "hand") return runHand();
+  tbusy = true; tReset(); tRefresh(); tStatus(""); tProg(0.02, "Starting");
   const outs = [];
   try {
     for (let i = 0; i < tfiles.length; i++) {
@@ -1494,9 +1519,10 @@ function showToolResult(outs) {
   const after = outs.reduce((a, o) => a + o.blob.size, 0), before = outs.reduce((a, o) => a + o.before, 0);
   const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = tool === "compress" ? fmtSize(before) + " → " + fmtSize(after) : fmtSize(after);
   head.append(t, nm, meta); box.appendChild(head);
-  outs.forEach((o) => { if (o.warn) { const p = document.createElement("p"); p.className = "note"; p.textContent = o.warn; box.appendChild(p); } });
+  outs.forEach((o) => { if (o.note) { const p = document.createElement("p"); p.className = "note"; p.textContent = o.note; box.appendChild(p); } if (o.warn) { const p = document.createElement("p"); p.className = "note"; p.textContent = o.warn; box.appendChild(p); } });
   const grid = document.createElement("div"); grid.className = "thumbs";
   outs.forEach((o) => {
+    if (!/^image\//.test(o.blob.type)) return;
     const u = URL.createObjectURL(o.blob); tUrls.push(u);
     const fig = document.createElement("figure"); const im = document.createElement("img"); im.src = u; im.alt = o.name; if (o.cut) im.className = "checker";
     const cap = document.createElement("figcaption"); const s = document.createElement("span"); s.textContent = fmtSize(o.blob.size);
@@ -1513,7 +1539,7 @@ function showToolResult(outs) {
   again.onclick = () => { tfiles = []; tReset(); tStatus(""); tRefresh(); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const gal = document.createElement("button"); gal.type = "button"; gal.className = "btn ghost"; gal.textContent = "Save to gallery";
   gal.onclick = async () => { try { const fl = outs.map((o) => new File([o.blob], o.name, { type: o.blob.type })); if (navigator.canShare && navigator.canShare({ files: fl })) { await navigator.share({ files: fl, title: "Save image" }); tStatus("In the menu choose Photos, Gallery or Save image."); } else { await tSave(outs[0].name, outs[0].blob); tStatus("Saved. Look in your Downloads or Gallery."); } } catch (e) { if (e && e.name !== "AbortError") tStatus("Could not open the save menu. Press and hold the picture, then choose Download image.", true); } };
-  row.append(dl, gal, again); box.appendChild(row); box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  if (/^image\//.test(outs[0].blob.type)) row.append(dl, gal, again); else row.append(dl, shareBtn(outs, tStatus), again); box.appendChild(row); box.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 async function tSample() {
   const c = document.createElement("canvas"); c.width = 1600; c.height = 1100; const g = c.getContext("2d");
@@ -1540,6 +1566,45 @@ const tdrop = $("t-drop");
 ["dragleave", "drop"].forEach((ev) => tdrop.addEventListener(ev, (e) => { e.preventDefault(); tdrop.classList.remove("over"); }));
 tdrop.addEventListener("drop", (e) => { if (!tbusy && e.dataTransfer) tAdd(e.dataTransfer.files); });
 tRefresh();
+/* ---------- handwriting tool ---------- */
+async function rotateFile(file, deg) {
+  const im = await imageToCanvasJpeg(file); const s = im.canvas; if (!+deg) return new File([await blobFromCanvas(s, "image/jpeg", 0.92)], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+  const c = document.createElement("canvas"); const sw = +deg === 180;
+  c.width = sw ? s.width : s.height; c.height = sw ? s.height : s.width; const g = c.getContext("2d");
+  g.translate(c.width / 2, c.height / 2); g.rotate(deg * Math.PI / 180); g.drawImage(s, -s.width / 2, -s.height / 2);
+  return new File([await blobFromCanvas(c, "image/jpeg", 0.92)], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+}
+let hPrevUrl = null, hPrevSeq = 0;
+async function hPreview() {
+  const img = $("h-prev"); const seq = ++hPrevSeq;
+  if (!tfiles.length) { img.hidden = true; return; }
+  try { const r = await rotateFile(tfiles[0], $("h-rot").value); if (seq !== hPrevSeq) return; if (hPrevUrl) URL.revokeObjectURL(hPrevUrl); hPrevUrl = URL.createObjectURL(r); img.src = hPrevUrl; img.hidden = false; } catch (e) { img.hidden = true; }
+}
+async function runHand() {
+  const key = ($("h-key").value || "").trim();
+  if (!key) { tStatus("Paste the AI reader key first. Steps: open aistudio.google.com/app/apikey, sign in, tap Create API key, copy it and paste it here.", true); return; }
+  tbusy = true; tReset(); tRefresh(); tStatus(""); tProg(0.02, "Starting"); window.__tp = true;
+  try {
+    const kind = $("h-out").value, outs = []; let sheets = [], blocks = [];
+    for (let i = 0; i < tfiles.length; i++) {
+      tProg(0.05 + 0.8 * i / tfiles.length, tfiles.length > 1 ? "Reading page " + (i + 1) + " of " + tfiles.length : "Reading the handwriting"); await tick();
+      const rf = await rotateFile(tfiles[i], $("h-rot").value);
+      if (kind === "xlsx") { const t = ocrToSheets(await ocrGemini(rf, "register", key)); t.forEach((s) => sheets.push(tfiles.length > 1 ? { name: "Page" + (i + 1) + " " + s.name, rows: s.rows } : s)); }
+      else { if (i) blocks.push({ type: "pb" }); blocks.push(...ocrToBlocks(await ocrGemini(rf, "doc", key))); }
+    }
+    tProg(0.95, kind === "xlsx" ? "Building the Excel file" : "Building the Word file");
+    const base = baseName(tfiles[0].name) + "-handwriting";
+    if (kind === "xlsx") outs.push({ name: base + ".xlsx", blob: await sheetsToXlsx(sheets, []), before: 0, note: "Check the times against the page. Unclear values have a question mark." });
+    else outs.push({ name: base + ".docx", blob: await blocksToDocx(blocks), before: 0 });
+    tProg(1, "Done"); showToolResult(outs); setTimeout(() => { tProg(null); tStatus(""); }, 400);
+  } catch (e) { tProg(null); tStatus((e && e.message) || "That did not work. Try again.", true); }
+  finally { window.__tp = false; tbusy = false; tRefresh(); }
+}
+try { const k = localStorage.getItem("cd-aikey") || ""; $("h-key").value = k; } catch (e) {}
+$("h-key").oninput = () => { try { localStorage.setItem("cd-aikey", $("h-key").value.trim()); $("aikey").value = $("h-key").value.trim(); } catch (e) {} };
+$("aikey").addEventListener("input", () => { $("h-key").value = $("aikey").value; });
+$("h-rot").onchange = hPreview;
+
 /* ---------- install prompt ---------- */
 let installEv = null;
 const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
