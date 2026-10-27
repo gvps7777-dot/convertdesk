@@ -156,7 +156,7 @@ footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top
 .range { display: flex; align-items: center; gap: 12px; }
 .range input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); height: 28px; }
 .range output { font: 600 13px var(--mono); min-width: 4.2ch; text-align: right; }
-.opt input[type=number] { font: inherit; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); max-width: 100%; }
+.opt input[type=password], .opt input[type=number] { font: inherit; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); max-width: 100%; }
 .opt .hint { font-size: 12.5px; color: var(--muted); }
 .checker { background-color: #fff; background-image: linear-gradient(45deg, #d5dbe3 25%, transparent 25%, transparent 75%, #d5dbe3 75%), linear-gradient(45deg, #d5dbe3 25%, transparent 25%, transparent 75%, #d5dbe3 75%); background-size: 16px 16px; background-position: 0 0, 8px 8px; }
 .thumbs .gain { color: var(--xlsx); font-weight: 600; }
@@ -353,6 +353,11 @@ body.tools .route { display: none; } body.tools .band.gut { padding-bottom: 56px
             <option value="220">High, 220 dpi</option>
             <option value="300">Print, 300 dpi</option>
           </select>
+        </div>
+        <div class="opt" id="opt-ai" hidden>
+          <label class="t" for="aikey">AI reader key (for handwriting, optional)</label>
+          <input type="password" id="aikey" autocomplete="off" placeholder="Paste your key here">
+          <span class="hint">Free key from aistudio.google.com/app/apikey. When a key is saved, the picture is sent to Google to be read, which handles handwriting much better. Leave it empty to read on this phone only.</span>
         </div>
         <div class="opt" id="opt-lang" hidden>
           <label class="t" for="lang">Language in the picture</label>
@@ -972,7 +977,39 @@ async function sheetsToXlsx(sheets, images) {
 }
 
 /* ---------- Image -> text through Claude ---------- */
+
+function ocrPrompt(mode) {
+  const prompt = mode === "table"
+    ? 'This image shows a table, spreadsheet or document. Transcribe it exactly as printed. Reply with only JSON: {"tables":[{"name":"short sheet name","rows":[["cell","cell"]]}]}. Use one table per distinct table in the image, every cell a string. If the image has no table, return one table named "Text" with one line of text per row. Do not add, correct or summarise anything.'
+    : 'This image shows a document. Transcribe it exactly as printed, in reading order. Reply with only JSON: {"blocks":[{"type":"h","level":1,"text":"heading"},{"type":"p","text":"paragraph"},{"type":"table","rows":[["cell","cell"]]}]}. Heading level is 1, 2 or 3. Do not add, correct or summarise anything.';
+  return prompt + " The text may be handwritten, so read it carefully. Keep the same rows and columns as the page. Leave a cell as an empty string if it is blank. Do not invent text.";
+}
+function getAiKey() { try { return (localStorage.getItem("cd-aikey") || "").trim(); } catch (e) { return ""; } }
+function blobToB64(b) { return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(",")[1]); fr.onerror = rej; fr.readAsDataURL(b); }); }
+async function ocrGemini(file, mode, key) {
+  setProgress(0.15, "Preparing the picture");
+  const im = await imageToCanvasJpeg(file); let c = im.canvas; const MAX = 2000;
+  if (Math.max(c.width, c.height) > MAX) { const s = MAX / Math.max(c.width, c.height), n = document.createElement("canvas"); n.width = Math.round(c.width * s); n.height = Math.round(c.height * s); n.getContext("2d").drawImage(c, 0, 0, n.width, n.height); c = n; }
+  const b64 = await blobToB64(await blobFromCanvas(c, "image/jpeg", 0.9));
+  const body = JSON.stringify({ contents: [{ parts: [{ text: ocrPrompt(mode) }, { inline_data: { mime_type: "image/jpeg", data: b64 } }] }], generationConfig: { temperature: 0, responseMimeType: "application/json" } });
+  let lastErr = "";
+  for (const model of ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"]) {
+    setProgress(0.4, "Reading with the AI reader");
+    let r; try { r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(key), { method: "POST", headers: { "Content-Type": "application/json" }, body }); }
+    catch (e) { throw new Error("No internet connection to the AI reader. Check your internet and try again."); }
+    if (r.status === 400 || r.status === 403) { let t = ""; try { t = (await r.json()).error.message; } catch (e) {} if (/API key|API_KEY|permission/i.test(t)) throw new Error("The AI key is not accepted. Check that you pasted the whole key."); lastErr = t || "HTTP " + r.status; continue; }
+    if (r.status === 404) { lastErr = "model not found"; continue; }
+    if (r.status === 429) throw new Error("The free AI limit is used up for now. Wait a minute and try again.");
+    if (!r.ok) { lastErr = "HTTP " + r.status; continue; }
+    const j = await r.json(); const parts = j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
+    const txt = parts && parts.map((p) => p.text || "").join("");
+    if (!txt) { lastErr = "empty answer"; continue; }
+    try { return JSON.parse(txt.replace(/^\s*```(?:json)?/i, "").replace(/```\s*$/, "").trim()); } catch (e) { lastErr = "unreadable answer"; continue; }
+  }
+  throw new Error("The AI reader did not answer (" + lastErr + "). Try again, or clear the AI key to read on this phone.");
+}
 async function ocrImage(file, mode) {
+  if (typeof claude === "undefined" && getAiKey()) return ocrGemini(file, mode, getAiKey());
   const sample = typeof claude === "undefined" ? null : await claude.use("sample");
   const caps = sample ? await sample.limits().catch(() => null) : null;
   if (!sample || !caps || !caps.images) return ocrLocal(file, mode);
@@ -1079,7 +1116,7 @@ function refresh() {
     li.append(nm, sz, x); list.appendChild(li);
   });
   const ocr = from === "jpg" && (to === "xlsx" || to === "docx");
-  $("opt-ocr").hidden = !ocr; $("opt-lang").hidden = !((ocr || (from === "pdf" && (to === "xlsx" || to === "docx"))) && typeof claude === "undefined"); $("opt-dpi").hidden = to !== "jpg";
+  $("opt-ocr").hidden = !ocr; $("opt-lang").hidden = !((ocr || (from === "pdf" && (to === "xlsx" || to === "docx"))) && typeof claude === "undefined"); $("opt-ai").hidden = $("opt-lang").hidden; $("opt-dpi").hidden = to !== "jpg";
   $("opts").hidden = !ocr && to !== "jpg";
   $("go").disabled = busy || !files.length;
   $("go").textContent = "Convert to " + FORMATS[to].tag;
@@ -1474,7 +1511,9 @@ function showToolResult(outs) {
   else { dl.textContent = "Download all as ZIP"; dl.onclick = async () => { await lib("jszip"); const z = new JSZip(); outs.forEach((o) => z.file(o.name, o.blob)); tSave("images-" + (tool === "compress" ? "compressed" : "nobg") + ".zip", await z.generateAsync({ type: "blob" })); }; }
   const again = document.createElement("button"); again.type = "button"; again.className = "btn ghost"; again.textContent = "Do more images";
   again.onclick = () => { tfiles = []; tReset(); tStatus(""); tRefresh(); window.scrollTo({ top: 0, behavior: "smooth" }); };
-  row.append(dl, shareBtn(outs, tStatus), again); box.appendChild(row); box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  const gal = document.createElement("button"); gal.type = "button"; gal.className = "btn ghost"; gal.textContent = "Save to gallery";
+  gal.onclick = async () => { try { const fl = outs.map((o) => new File([o.blob], o.name, { type: o.blob.type })); if (navigator.canShare && navigator.canShare({ files: fl })) { await navigator.share({ files: fl, title: "Save image" }); tStatus("In the menu choose Photos, Gallery or Save image."); } else { await tSave(outs[0].name, outs[0].blob); tStatus("Saved. Look in your Downloads or Gallery."); } } catch (e) { if (e && e.name !== "AbortError") tStatus("Could not open the save menu. Press and hold the picture, then choose Download image.", true); } };
+  row.append(dl, gal, again); box.appendChild(row); box.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 async function tSample() {
   const c = document.createElement("canvas"); c.width = 1600; c.height = 1100; const g = c.getContext("2d");
@@ -1488,6 +1527,8 @@ function setMode(m) {
   const t = m === "tools"; document.body.classList.toggle("tools", t); document.querySelector("h1").textContent = t ? "What do you want to do with your photos?" : "What do you want to convert?"; document.querySelector(".band p").textContent = t ? "Make a photo smaller, or cut out the background." : "Pick the file you have, then the file you need."; $("view-convert").hidden = t; $("view-tools").hidden = !t;
   $("m-convert").setAttribute("aria-pressed", String(!t)); $("m-tools").setAttribute("aria-pressed", String(t)); window.scrollTo({ top: 0 });
 }
+try { $("aikey").value = localStorage.getItem("cd-aikey") || ""; } catch (e) {}
+$("aikey").oninput = () => { try { localStorage.setItem("cd-aikey", $("aikey").value.trim()); } catch (e) {} };
 $("m-convert").onclick = () => setMode("convert"); $("m-tools").onclick = () => setMode("tools");
 $("t-file").onchange = (e) => { tAdd(e.target.files); e.target.value = ""; };
 $("t-go").onclick = runTool; $("t-sample").onclick = tSample;
