@@ -1,0 +1,1774 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Convert Desk</title>
+<meta name="theme-color" content="#0b1e3a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Convert Desk">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: navy masthead with the product name, then one white work card overlapping it. Three numbered steps (formats, file, convert) because the order is real. Format colours mark only the chosen tiles and result tag. */
+:root {
+  --bg: #f1f4f9;
+  --surface: #ffffff;
+  --ink: #0e1b2e;
+  --muted: #5b6b80;
+  --line: #dbe2ec;
+  --soft: #f5f7fb;
+  --band: #0b1e3a;
+  --band-ink: #ffffff;
+  --band-muted: #a9b9d1;
+  --accent: #1f5eff;
+  --accent-ink: #ffffff;
+  --xlsx: #17703f;
+  --docx: #2457b8;
+  --pdf: #c0332e;
+  --jpg: #9a5f00;
+  --err: #c0332e;
+  --shadow: 0 1px 2px rgba(11,30,58,.06), 0 12px 32px rgba(11,30,58,.10);
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #080f1b; --surface: #101a2b; --ink: #e8eef8; --muted: #8fa1ba; --line: #22324a; --soft: #16233a;
+    --band: #0b1830; --band-ink: #ffffff; --band-muted: #8fa5c6; --accent: #6b94ff; --accent-ink: #08122a;
+    --xlsx: #4cc38a; --docx: #7aa5ff; --pdf: #ff857f; --jpg: #f0b44c; --err: #ff857f;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #080f1b; --surface: #101a2b; --ink: #e8eef8; --muted: #8fa1ba; --line: #22324a; --soft: #16233a;
+  --band: #0b1830; --band-ink: #ffffff; --band-muted: #8fa5c6; --accent: #6b94ff; --accent-ink: #08122a;
+  --xlsx: #4cc38a; --docx: #7aa5ff; --pdf: #ff857f; --jpg: #f0b44c; --err: #ff857f;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.45); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding-block: 0 calc(40px + env(safe-area-inset-bottom, 0px)); -webkit-text-size-adjust: 100%; }
+.gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.band { background: var(--band); color: var(--band-ink); padding-block: calc(34px + env(safe-area-inset-top, 0px)) 84px; }
+.band-in { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.mark { width: 46px; height: 46px; border-radius: 12px; background: var(--accent); box-shadow: 0 0 0 2px rgba(255,255,255,.18); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.mark img { width: 100%; height: 100%; border-radius: 11px; display: block; object-fit: cover; }
+.brand b { font: 800 13px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--band-muted); font-weight: 600; }
+h1 { font: 800 38px/1.08 var(--display); letter-spacing: -.03em; margin: 0; text-wrap: balance; }
+.band p { margin: 0; color: var(--band-muted); max-width: 48ch; font-size: 16px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.chips span { font: 600 12px/1 var(--mono); letter-spacing: .06em; padding: 7px 10px; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; color: var(--band-ink); }
+.wrap { max-width: 720px; margin: -56px auto 0; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 22px; min-width: 0; box-shadow: var(--shadow); }
+.step { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.step-h { display: flex; align-items: center; gap: 10px; }
+.num { width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: var(--surface); font: 700 12px/1 var(--mono); display: grid; place-items: center; flex: none; }
+.lab { font: 700 15px/1.2 var(--display); margin: 0; }
+.sub { font: 600 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-left: auto; }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.tile {
+  appearance: none; font: inherit; color: var(--ink); background: var(--surface);
+  border: 1.5px solid var(--line); border-radius: 12px; padding: 14px 4px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; min-width: 0;
+  transition: border-color .12s, background .12s, transform .12s;
+}
+.tile:hover:not(:disabled) { border-color: var(--c); }
+.tile:active:not(:disabled) { transform: scale(.97); }
+.tile b { font: 700 15px/1.1 var(--mono); }
+.tile span { font-size: 12px; color: var(--muted); font-weight: 500; }
+.tile[data-f="xlsx"] { --c: var(--xlsx); } .tile[data-f="docx"] { --c: var(--docx); }
+.tile[data-f="pdf"] { --c: var(--pdf); } .tile[data-f="jpg"] { --c: var(--jpg); }
+.tile b { color: var(--c); }
+.tile[aria-pressed="true"] { background: color-mix(in srgb, var(--c) 12%, var(--surface)); border-color: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 18%, transparent); }
+.tile:disabled { opacity: .35; cursor: not-allowed; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.swap-row { display: flex; align-items: center; gap: 12px; margin-block: -6px; }
+.swap-row hr { flex: 1; border: 0; border-top: 1px solid var(--line); margin: 0; }
+.swap {
+  appearance: none; font: 600 13px/1 var(--body); color: var(--ink); background: var(--soft);
+  border: 1.5px solid var(--line); border-radius: 999px; padding: 9px 15px 9px 12px; display: inline-flex; gap: 8px; align-items: center; cursor: pointer;
+}
+.swap:hover { border-color: var(--accent); color: var(--accent); }
+.swap svg { width: 16px; height: 16px; }
+.note { margin: 0; font-size: 13.5px; color: var(--muted); padding: 11px 13px; background: var(--soft); border-radius: 10px; border: 1px solid var(--line); }
+.drop {
+  border: 2px dashed var(--line); border-radius: 14px; padding: 26px 16px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 12px; background: var(--soft);
+}
+.drop .ic { width: 44px; height: 44px; color: var(--accent); }
+.drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.drop p { margin: 0; color: var(--muted); max-width: 34ch; }
+.drop .ext { font-family: var(--mono); color: var(--ink); font-weight: 600; font-size: 13px; }
+.btn {
+  appearance: none; font: 700 15px/1 var(--body); border-radius: 12px; padding: 15px 20px; cursor: pointer;
+  border: 0; background: var(--accent); color: var(--accent-ink); display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 48px; text-align: center;
+}
+.btn:hover:not(:disabled) { filter: brightness(1.08); }
+.btn.ghost { background: var(--surface); color: var(--ink); border: 1.5px solid var(--line); font-weight: 600; padding: 11px 16px; font-size: 14px; min-height: 44px; }
+.btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.link { appearance: none; border: 0; background: none; padding: 4px 2px; font: 600 12px var(--mono); color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.files { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.files li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; min-width: 0; background: var(--surface); }
+.files .nm { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.files .sz { font: 500 12px var(--mono); color: var(--muted); white-space: nowrap; }
+.files button { appearance: none; border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 22px; line-height: 1; padding: 2px 8px; }
+.opts { display: flex; flex-direction: column; gap: 14px; }
+.opt { display: flex; flex-direction: column; gap: 6px; }
+.opt .t { font-weight: 600; font-size: 14px; }
+.opt select { font: inherit; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); max-width: 100%; }
+.chk { display: flex; gap: 12px; align-items: flex-start; font-weight: 600; font-size: 14px; }
+.chk input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.chk small { display: block; color: var(--muted); font-size: 13px; font-weight: 400; }
+.bar { height: 8px; border-radius: 4px; background: var(--soft); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .15s; }
+.status { font-size: 14px; color: var(--muted); margin: 0; }
+.status.err { color: var(--err); font-weight: 600; }
+.result { display: flex; flex-direction: column; gap: 16px; }
+.res-head { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.res-head .nm { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 700; font-size: 16px; }
+.res-head .meta { font: 500 12px var(--mono); color: var(--muted); }
+.res-tag { font: 700 12px var(--mono); padding: 5px 9px; border-radius: 7px; color: var(--c); background: color-mix(in srgb, var(--c) 14%, var(--surface)); }
+.thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+.thumbs figure { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.thumbs img { width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #fff; display: block; }
+.thumbs figcaption { display: flex; justify-content: space-between; align-items: center; font: 500 12px var(--mono); color: var(--muted); gap: 6px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.row .btn { flex: 1 1 170px; }
+.trust { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.trust div { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--muted); }
+.trust b { font-size: 14px; color: var(--ink); }
+footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top: 4px; }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.modes button { appearance: none; border: 0; background: transparent; color: var(--muted); font: 700 14px/1 var(--body); padding: 13px 8px; border-radius: 10px; cursor: pointer; min-height: 44px; }
+.modes button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.view { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.tiles.two { grid-template-columns: repeat(3, 1fr); }
+.tile[data-f="hand"] { --c: var(--pdf); } .tile[data-f="compress"] { --c: var(--docx); } .tile[data-f="cutout"] { --c: var(--xlsx); }
+.range { display: flex; align-items: center; gap: 12px; }
+.range input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); height: 28px; }
+.range output { font: 600 13px var(--mono); min-width: 4.2ch; text-align: right; }
+.opt input[type=password], .opt input[type=number] { font: inherit; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); max-width: 100%; }
+.opt .hint { font-size: 12.5px; color: var(--muted); }
+.checker { background-color: #fff; background-image: linear-gradient(45deg, #d5dbe3 25%, transparent 25%, transparent 75%, #d5dbe3 75%), linear-gradient(45deg, #d5dbe3 25%, transparent 25%, transparent 75%, #d5dbe3 75%); background-size: 16px 16px; background-position: 0 0, 8px 8px; }
+.thumbs .gain { color: var(--xlsx); font-weight: 600; }
+.getapp { background: #fff; color: #0b1e3a; display: flex; align-items: center; gap: 12px; padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top)); border-bottom: 1px solid rgba(11,30,58,.12); }
+.getapp img { width: 38px; height: 38px; border-radius: 10px; flex: none; }
+.getapp .tx { flex: 1; min-width: 0; font: 600 13px/1.25 var(--body); }
+.getapp .tx small { display: block; font-weight: 500; color: #51627d; font-size: 12px; }
+.getapp button { appearance: none; border: 0; background: #1f5eff; color: #fff; font: 700 13px var(--body); padding: 10px 14px; border-radius: 999px; min-height: 40px; cursor: pointer; white-space: nowrap; }
+.getapp .x { background: none; color: #51627d; font-size: 22px; padding: 4px 8px; min-height: 0; }
+.sheet-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
+.sheet { background: var(--surface); color: var(--ink); width: 100%; max-width: 520px; border-radius: 18px 18px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 10px; }
+.sheet h3 { margin: 0; font-size: 18px; } .sheet ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; } .sheet p { margin: 0; color: var(--muted); font-size: 13px; }
+
+/* ---- polish pass ---- */
+.band { background: radial-gradient(120% 90% at 85% -10%, #1f4fb8 0%, rgba(31,79,184,0) 55%), linear-gradient(180deg, #0b1e3a 0%, #0a1a33 100%); padding-block: calc(22px + env(safe-area-inset-top, 0px)) 88px; }
+.brand { gap: 12px; } .mark { width: 52px; height: 52px; border-radius: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 0 2px rgba(255,255,255,.2); }
+.mark img { border-radius: 13px; }
+.brand b { font: 800 20px/1.1 var(--display); letter-spacing: -.01em; text-transform: none; color: #fff; }
+.brand small { display: block; font: 500 12px/1.3 var(--body); color: var(--band-muted); margin-top: 3px; }
+h1 { font-size: 30px; line-height: 1.12; margin-top: 6px; }
+.band p { font-size: 15px; line-height: 1.5; }
+.chips span { background: rgba(255,255,255,.06); }
+.wrap { margin-top: -62px; }
+.panel { border-radius: 20px; box-shadow: 0 1px 2px rgba(11,30,58,.06), 0 14px 38px rgba(11,30,58,.14); }
+.modes { border-radius: 16px; box-shadow: 0 8px 24px rgba(11,30,58,.18); }
+.modes button { font-size: 15px; min-height: 48px; border-radius: 12px; }
+.tile { border-radius: 14px; padding: 16px 4px 13px; box-shadow: 0 1px 0 rgba(11,30,58,.04); }
+.tile b { font-size: 16px; }
+.btn { border-radius: 14px; min-height: 54px; font-size: 16px; }
+.btn:not(.ghost):not(:disabled) { background: linear-gradient(180deg, #3a73ff, #1f5eff); box-shadow: 0 8px 20px rgba(31,94,255,.35); }
+.drop { border-radius: 16px; }
+.num { box-shadow: 0 2px 6px rgba(11,30,58,.25); }
+.trust { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
+.trust div { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 10px; text-align: center; font-size: 11.5px; line-height: 1.35; gap: 3px; }
+.trust b { font-size: 13px; }
+.getapp { padding: 8px 12px; gap: 10px; }
+.getapp img { width: 34px; height: 34px; border-radius: 9px; }
+.getapp .tx { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .getapp .tx small { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
+.getapp #getapp-go { padding: 9px 12px; font-size: 12.5px; min-height: 38px; }
+footer { font-size: 12px; }
+
+/* ---- redesign: document tray. Each format is a sheet in its own colour; the card edge shows the route from one colour to the other. ---- */
+:root { --paper: #f3f4f7; --ink-btn: #111827; --on-fmt: #ffffff; --from-c: var(--xlsx); --to-c: var(--pdf); --jpg: #b87400; --xlsx: #14804a; --docx: #2b5fd9; --pdf: #d6382f; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --on-fmt: #0a1220; --ink-btn: #e8eef8; --paper: #080f1b; } }
+:root[data-theme="dark"] { --on-fmt: #0a1220; --ink-btn: #e8eef8; --paper: #080f1b; }
+body { background: var(--bg); letter-spacing: -.005em; }
+.band { background: transparent; color: var(--ink); padding-block: calc(18px + env(safe-area-inset-top, 0px)) 6px; }
+.band-in { gap: 10px; }
+.brand b { color: var(--ink); font: 800 19px/1 var(--display); letter-spacing: -.02em; }
+.brand small { display: none; }
+.mark { width: 40px; height: 40px; border-radius: 11px; box-shadow: 0 2px 8px rgba(17,24,39,.25); }
+.mark img { border-radius: 11px; }
+h1 { font: 800 31px/1.08 var(--display); letter-spacing: -.035em; color: var(--ink); margin-top: 14px; }
+.band p { color: var(--muted); font-size: 15px; max-width: 34ch; }
+.chips { display: none; }
+.wrap { margin-top: 6px; gap: 14px; }
+.modes { box-shadow: none; border-radius: 14px; background: color-mix(in srgb, var(--ink) 7%, var(--bg)); border: 0; padding: 4px; }
+.modes button { border-radius: 11px; min-height: 44px; font: 700 14px/1 var(--body); color: var(--muted); }
+.modes button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(17,24,39,.18); }
+.panel { border: 0; border-radius: 22px; padding: 24px 18px 20px; background-color: var(--surface); background-image: linear-gradient(90deg, var(--from-c), var(--to-c)); background-size: 100% 5px; background-repeat: no-repeat; box-shadow: 0 1px 2px rgba(17,24,39,.05), 0 10px 30px rgba(17,24,39,.08); gap: 24px; }
+#view-tools .panel { --from-c: var(--docx); --to-c: var(--xlsx); }
+.lab { font: 700 16px/1.2 var(--display); letter-spacing: -.01em; }
+.num { background: var(--ink); color: var(--surface); width: 24px; height: 24px; font-size: 12px; box-shadow: none; }
+.tiles { gap: 9px; }
+.tile { position: relative; aspect-ratio: 4 / 5; justify-content: flex-end; padding: 10px 4px 11px; gap: 2px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; box-shadow: none; }
+.tile::before { content: ""; position: absolute; top: 0; right: 0; width: 18px; height: 18px; background: linear-gradient(225deg, var(--paper) 50%, color-mix(in srgb, var(--c) 28%, var(--surface)) 50%); border-bottom-left-radius: 6px; }
+.tile::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c); }
+.tile b { font: 800 17px/1 var(--display); letter-spacing: -.02em; color: var(--c); }
+.tile span { font-size: 12px; font-weight: 600; color: var(--muted); }
+.tile[aria-pressed="true"] { background: var(--c); border-color: var(--c); box-shadow: 0 8px 18px color-mix(in srgb, var(--c) 40%, transparent); transform: translateY(-2px); }
+.tile[aria-pressed="true"] b, .tile[aria-pressed="true"] span { color: var(--on-fmt); }
+.tile[aria-pressed="true"]::after { background: rgba(255,255,255,.35); }
+.tile[aria-pressed="true"]::before { background: linear-gradient(225deg, var(--surface) 50%, rgba(255,255,255,.35) 50%); }
+.tiles.two .tile { aspect-ratio: 1 / 1; align-items: flex-start; padding: 10px; justify-content: flex-end; } .tiles.two .tile b { font-size: 14.5px; } .tiles.two .tile span { font-size: 11px; }
+.tile:disabled { opacity: .28; }
+.swap { border-radius: 999px; font-weight: 700; }
+.note { background: var(--soft); border: 0; border-left: 3px solid var(--to-c); border-radius: 4px 12px 12px 4px; color: var(--ink); font-size: 14px; }
+.drop { border: 2px dashed color-mix(in srgb, var(--from-c) 45%, var(--line)); background: color-mix(in srgb, var(--from-c) 5%, var(--surface)); border-radius: 16px; }
+.drop .ic { color: var(--from-c); }
+.drop .ext { color: var(--from-c); }
+.btn { border-radius: 14px; min-height: 54px; font: 700 16px/1 var(--display); letter-spacing: -.005em; }
+.btn:not(.ghost):not(:disabled) { background: var(--ink-btn); color: var(--surface); box-shadow: 0 6px 16px rgba(17,24,39,.22); }
+.btn:not(.ghost):not(:disabled) { text-shadow: none; }
+#go:not(:disabled) { background: var(--to-c); color: var(--on-fmt); box-shadow: 0 8px 20px color-mix(in srgb, var(--to-c) 45%, transparent); }
+.btn:disabled { background: color-mix(in srgb, var(--ink) 12%, var(--surface)); color: var(--muted); opacity: 1; }
+.btn.ghost { border-radius: 12px; font: 700 14px/1 var(--body); }
+.trust { display: none !important; }
+footer { color: var(--muted); text-align: left; font-size: 12.5px; padding: 0 4px; }
+.getapp { background: var(--ink-btn); color: var(--surface); border: 0; }
+.getapp .tx small { color: color-mix(in srgb, var(--surface) 65%, transparent); }
+.getapp #getapp-go { background: var(--surface); color: var(--ink); }
+.getapp .x { color: color-mix(in srgb, var(--surface) 70%, transparent); background: none; }
+.res-head .res-tag { border-radius: 8px; }
+.band.gut { padding-block: calc(14px + env(safe-area-inset-top, 0px)) 4px; }
+.swap-row { margin-block: 6px 2px; }
+@media (max-width: 480px) { h1 { font-size: 30px; } .band.gut { padding-block: calc(14px + env(safe-area-inset-top, 0px)) 4px; } .panel { padding: 24px 16px 20px; } .tiles { gap: 8px; } .tile { padding: 10px 2px 11px; } }
+
+/* ---- v3: dark stage with live route sheets ---- */
+.band.gut { background: #0a0f1e; color: #fff; position: relative; overflow: hidden; padding-block: calc(16px + env(safe-area-inset-top, 0px)) 64px; isolation: isolate; }
+.band.gut::before { content: ""; position: absolute; inset: -30% -20% auto -20%; height: 130%; z-index: -1; background: radial-gradient(40% 50% at 22% 62%, color-mix(in srgb, var(--from-c) 70%, transparent), transparent 70%), radial-gradient(40% 50% at 80% 55%, color-mix(in srgb, var(--to-c) 70%, transparent), transparent 70%); opacity: .55; filter: blur(8px); transition: opacity .4s; }
+.band.gut::after { content: ""; position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1.2px); background-size: 18px 18px; -webkit-mask-image: linear-gradient(180deg, #000 20%, transparent 95%); mask-image: linear-gradient(180deg, #000 20%, transparent 95%); }
+.brand b { color: #fff; } h1 { color: #fff; font-size: 34px; margin-top: 8px; } .band p { color: #aeb9d1; }
+.mark { box-shadow: 0 0 0 2px rgba(255,255,255,.25), 0 6px 18px rgba(0,0,0,.5); }
+.route { display: flex; align-items: center; justify-content: center; gap: 0; height: 168px; margin-top: 6px; perspective: 700px; }
+.sheet { position: relative; width: 106px; height: 140px; border-radius: 14px; background: var(--c); color: var(--on-fmt); display: flex; flex-direction: column; justify-content: flex-end; padding: 12px; box-shadow: 0 18px 36px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.35); transition: transform .5s cubic-bezier(.2,.8,.2,1), background .3s; }
+.sheet::before { content: ""; position: absolute; top: 0; right: 0; width: 28px; height: 28px; border-top-right-radius: 14px; background: linear-gradient(225deg, #0a0f1e 50%, rgba(255,255,255,.45) 50%); }
+.sheet::after { content: ""; position: absolute; left: 12px; right: 12px; top: 18px; height: 52px; background: repeating-linear-gradient(180deg, rgba(255,255,255,.42) 0 5px, transparent 5px 13px); -webkit-mask-image: linear-gradient(90deg, #000 70%, rgba(0,0,0,.5)); mask-image: linear-gradient(90deg, #000 70%, rgba(0,0,0,.5)); border-radius: 3px; }
+.sheet b { font: 800 22px/1 var(--display); letter-spacing: -.03em; } .sheet i { font: 600 12px/1.2 var(--body); font-style: normal; opacity: .85; margin-top: 3px; }
+.s-from { --c: var(--from-c); transform: rotate(-9deg) translateX(8px); z-index: 1; }
+.s-to { --c: var(--to-c); transform: rotate(7deg) translate(-8px, 12px); }
+.s-from.flip, .s-to.flip { animation: flip .5s cubic-bezier(.2,.8,.2,1); }
+@keyframes flip { from { transform: rotateY(90deg) scale(.9); opacity: .4; } }
+.arrow { position: relative; z-index: 3; width: 46px; height: 46px; border-radius: 50%; background: #fff; color: #0a0f1e; display: grid; place-items: center; margin: 0 -14px; box-shadow: 0 8px 20px rgba(0,0,0,.4); } .arrow svg { width: 22px; height: 22px; }
+.wrap { margin-top: -34px; position: relative; z-index: 2; }
+.modes { background: var(--surface); box-shadow: 0 10px 28px rgba(5,10,25,.28); }
+.getapp { background: #0a0f1e; border-bottom: 1px solid rgba(255,255,255,.1); }
+.getapp #getapp-go { background: #fff; color: #0a0f1e; }
+body.tools .route { display: none; } body.tools .band.gut { padding-bottom: 56px; }
+@media (prefers-reduced-motion: reduce) { .sheet, .s-from.flip, .s-to.flip { animation: none; transition: none; } }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .bar i, .tile { transition: none; } }
+@media (max-width: 480px) {
+  h1 { font-size: 31px; } .band { padding-block: calc(26px + env(safe-area-inset-top, 0px)) 76px; } .panel { padding: 16px; border-radius: 14px; gap: 20px; }
+  .tiles { gap: 8px; } .tile { padding: 12px 2px 10px; } .tile span { font-size: 11px; } .trust { grid-template-columns: 1fr; gap: 10px; }
+  .sub { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="getapp" id="getapp" hidden>
+  <img src="icon-192.png" alt="" width="38" height="38">
+  <div class="tx">Convert Desk<small>Free app for your phone</small></div>
+  <button type="button" id="getapp-go">Download this app</button>
+  <button type="button" class="x" id="getapp-x" aria-label="Close">×</button>
+</div>
+<div class="sheet-bg" id="sheet" hidden><div class="sheet" role="dialog" aria-label="Install steps">
+  <h3>Download this app</h3><div id="sheet-body"></div>
+  <button class="btn" type="button" id="sheet-ok">OK</button></div></div>
+
+
+<div class="band gut">
+  <div class="band-in">
+    <div class="brand">
+      <div class="mark"><img src="icon-192.png" alt="" width="42" height="42"></div>
+      <div><b>Convert Desk</b><small>File converter &amp; image tools</small></div>
+    </div>
+    <h1>What do you want to convert?</h1>
+    <p>Pick the file you have, then the file you need.</p>
+    <div class="route" aria-hidden="true"><div class="sheet s-from" id="rt-from"><b></b><i></i></div><div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></div><div class="sheet s-to" id="rt-to"><b></b><i></i></div></div>
+    <div class="chips"><span>XLSX</span><span>DOCX</span><span>PDF</span><span>JPG</span></div>
+  </div>
+</div>
+
+<div class="wrap gut">
+  <div class="modes" role="group" aria-label="Mode">
+    <button type="button" id="m-convert" aria-pressed="true">Convert files</button>
+    <button type="button" id="m-tools" aria-pressed="false">Image tools</button>
+  </div>
+  <div class="view" id="view-convert">
+  <section class="panel" aria-label="Converter">
+    <div class="step">
+      <div class="step-h"><span class="num">1</span><h2 class="lab" id="lab-from">Convert from</h2></div>
+      <div class="tiles" id="from" role="group" aria-labelledby="lab-from"></div>
+      <div class="swap-row">
+        <hr>
+        <button class="swap" id="swap" type="button">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v10M1.5 9.5 4 12l2.5-2.5M12 14V4M9.5 6.5 12 4l2.5 2.5"/></svg>
+          Swap direction
+        </button>
+        <hr>
+      </div>
+      <div class="step-h"><h2 class="lab" id="lab-to" style="margin-left:34px">Convert to</h2></div>
+      <div class="tiles" id="to" role="group" aria-labelledby="lab-to"></div>
+      <p class="note" id="note"></p>
+    </div>
+
+    <div class="step">
+      <div class="step-h"><span class="num">2</span><h2 class="lab">Add your file</h2></div>
+      <div class="drop" id="drop">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+        <p id="drop-text"></p>
+        <div class="row" style="justify-content:center">
+          <label class="btn ghost" for="file" id="pick">Choose file</label>
+          <button class="btn ghost" type="button" id="sample-btn">Try a sample</button>
+        </div>
+        <input type="file" id="file" hidden>
+      </div>
+      <ul class="files" id="files" hidden></ul>
+      <div class="opts" id="opts" hidden>
+        <div class="opt" id="opt-dpi" hidden>
+          <label class="t" for="dpi">Image quality</label>
+          <select id="dpi">
+            <option value="150">Standard, 150 dpi</option>
+            <option value="220">High, 220 dpi</option>
+            <option value="300">Print, 300 dpi</option>
+          </select>
+        </div>
+        <div class="opt" id="opt-ai" hidden>
+          <label class="t" for="aikey">AI reader key (for handwriting, optional)</label>
+          <input type="password" id="aikey" autocomplete="off" placeholder="Paste your key here">
+          <span class="hint">Free key from aistudio.google.com/app/apikey. When a key is saved, the picture is sent to Google to be read, which handles handwriting much better. Leave it empty to read on this phone only.</span>
+        </div>
+        <div class="opt" id="opt-lang" hidden>
+          <label class="t" for="lang">Language in the picture</label>
+          <select id="lang">
+            <option value="eng">English</option>
+            <option value="urd">Urdu</option>
+            <option value="eng+urd">English and Urdu</option>
+          </select>
+        </div>
+        <label class="chk" id="opt-ocr" hidden for="ocr">
+          <input type="checkbox" id="ocr" checked>
+          <span>Read the text in the image<small>The text is read on your phone. Turn this off to place the picture only.</small></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-h"><span class="num">3</span><h2 class="lab">Convert and save</h2></div>
+      <button class="btn" id="go" type="button" disabled>Convert</button>
+      <div class="bar" id="bar" hidden><i id="bar-i"></i></div>
+      <p class="status" id="status" role="status" aria-live="polite" hidden></p>
+    </div>
+  </section>
+
+  <section class="panel result" id="result" hidden aria-label="Result"></section>
+  </div>
+
+  <div class="view" id="view-tools" hidden>
+    <section class="panel" aria-label="Image tools">
+      <div class="step">
+        <div class="step-h"><span class="num">1</span><h2 class="lab" id="lab-tool">Choose a tool</h2></div>
+        <div class="tiles two" id="t-tiles" role="group" aria-labelledby="lab-tool"></div>
+        <p class="note" id="t-note"></p>
+      </div>
+      <div class="step">
+        <div class="step-h"><span class="num">2</span><h2 class="lab">Add your images</h2></div>
+        <div class="drop" id="t-drop">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-9 9"/></svg>
+          <p>Tap or drop images. Accepts <span class="ext">.jpg, .png or .webp</span>.</p>
+          <div class="row" style="justify-content:center">
+            <label class="btn ghost" for="t-file">Choose images</label>
+            <button class="btn ghost" type="button" id="t-sample">Try a sample</button>
+          </div>
+          <input type="file" id="t-file" accept="image/*" multiple hidden>
+        </div>
+        <ul class="files" id="t-files" hidden></ul>
+      </div>
+      <div class="step">
+        <div class="step-h"><span class="num">3</span><h2 class="lab">Set it up and run</h2></div>
+        <div class="opts" id="t-opt-compress">
+          <div class="opt">
+            <label class="t" for="c-q">Quality</label>
+            <div class="range"><input type="range" id="c-q" min="30" max="95" step="5" value="70"><output id="c-q-out" for="c-q">70%</output></div>
+            <span class="hint">Lower quality makes a smaller file.</span>
+          </div>
+          <div class="opt">
+            <label class="t" for="c-side">Longest side</label>
+            <select id="c-side">
+              <option value="0">Keep original size</option>
+              <option value="2560">2560 px</option>
+              <option value="1920" selected>1920 px</option>
+              <option value="1280">1280 px</option>
+              <option value="800">800 px</option>
+            </select>
+          </div>
+          <div class="opt">
+            <label class="t" for="c-fmt">Save as</label>
+            <select id="c-fmt"><option value="jpg">JPG</option><option value="webp">WebP (smaller)</option></select>
+          </div>
+          <div class="opt">
+            <label class="t" for="c-kb">Target size in KB (optional)</label>
+            <input type="number" id="c-kb" inputmode="numeric" min="10" step="10" placeholder="For example 200">
+            <span class="hint">Set this to meet an upload limit. Quality is chosen for you.</span>
+          </div>
+        </div>
+        <div class="opts" id="t-opt-hand" hidden>
+          <div class="opt">
+            <label class="t" for="h-key">AI reader key</label>
+            <input type="password" id="h-key" autocomplete="off" placeholder="Paste your key here (needed once)">
+            <span class="hint">Free key: open aistudio.google.com/app/apikey, sign in, tap Create API key, then paste it here. The picture is sent to Google to be read.</span>
+          </div>
+          <div class="opt">
+            <label class="t" for="h-rot">Photo direction</label>
+            <select id="h-rot"><option value="0">As it is</option><option value="90">Turn right</option><option value="270">Turn left</option><option value="180">Upside down</option></select>
+            <img id="h-prev" alt="Preview" style="max-width:100%;max-height:240px;border-radius:10px;border:1px solid var(--line);align-self:flex-start" hidden>
+            <span class="hint">If the page is sideways, turn it so the writing is upright. The preview shows how it will be read.</span>
+          </div>
+          <div class="opt">
+            <label class="t" for="h-out">Make</label>
+            <select id="h-out"><option value="xlsx">Excel table</option><option value="docx">Word document</option></select>
+          </div>
+        </div>
+        <div class="opts" id="t-opt-cutout" hidden>
+          <div class="opt" id="r-mode-wrap">
+            <label class="t" for="r-mode">Method</label>
+            <select id="r-mode">
+              <option value="smart" id="r-smart" hidden>Smart AI (best, keeps the object safe)</option>
+              <option value="plain">Plain background (fast, offline)</option>
+            </select>
+          </div>
+          <div class="opt" id="r-str-wrap">
+            <label class="t" for="r-str">Strength</label>
+            <div class="range"><input type="range" id="r-str" min="10" max="100" step="2" value="28"><output id="r-str-out" for="r-str">28</output></div>
+            <span class="hint">Raise it if background is left behind. Lower it if the object is being cut.</span>
+          </div>
+          <div class="opt">
+            <label class="t" for="r-bg">Result background</label>
+            <select id="r-bg"><option value="clear">Transparent (PNG)</option><option value="white">White (PNG)</option></select>
+          </div>
+        </div>
+        <button class="btn" id="t-go" type="button" disabled>Compress images</button>
+        <div class="bar" id="t-bar" hidden><i id="t-bar-i"></i></div>
+        <p class="status" id="t-status" role="status" aria-live="polite" hidden></p>
+      </div>
+    </section>
+    <section class="panel result" id="t-result" hidden aria-label="Result"></section>
+  </div>
+
+  <div class="trust">
+    <div><b>Private</b>Files stay on your phone</div>
+    <div><b>Free</b>No sign-up needed</div>
+    <div><b>Both ways</b>All four formats</div>
+  </div>
+  <footer>Your files stay on your device, except pictures you read with the AI reader key. Readers load from a public library the first time you use them, so connect to the internet once.</footer>
+</div>
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const CDN = "https://cdnjs.cloudflare.com/ajax/libs/";
+const LIBS = {
+  jszip: { url: CDN + "jszip/3.10.1/jszip.min.js", ok: () => window.JSZip },
+  exceljs: { url: CDN + "exceljs/4.4.0/exceljs.min.js", ok: () => window.ExcelJS },
+  jspdf: { url: CDN + "jspdf/2.5.1/jspdf.umd.min.js", ok: () => window.jspdf },
+  pdfjs: { url: CDN + "pdf.js/3.11.174/pdf.min.js", ok: () => window.pdfjsLib, after: ["pdfworker"] },
+  pdfworker: { url: CDN + "pdf.js/3.11.174/pdf.worker.min.js", ok: () => window.pdfjsWorker },
+};
+const loading = {};
+function loadScript(url) {
+  return new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = url; s.onload = () => res(); s.onerror = () => rej(new Error("Could not load a converter component. Check your connection and try again."));
+    document.head.appendChild(s);
+  });
+}
+function lib(name) {
+  const L = LIBS[name];
+  if (L.ok()) return Promise.resolve();
+  if (!loading[name]) {
+    loading[name] = loadScript(L.url).then(async () => {
+      for (const a of L.after || []) await lib(a);
+      if (name === "pdfjs") window.pdfjsLib.GlobalWorkerOptions.workerSrc = LIBS.pdfworker.url;
+    }).catch((e) => { delete loading[name]; throw e; });
+  }
+  return loading[name];
+}
+const fmtSize = (n) => n < 1024 ? n + " B" : n < 1048576 ? (n / 1024).toFixed(n < 10240 ? 1 : 0) + " KB" : (n / 1048576).toFixed(1) + " MB";
+const baseName = (n) => n.replace(/\.[^.]+$/, "") || "converted";
+const tick = () => new Promise((r) => setTimeout(r, 0));
+const RTL_RE = /[֐-ࣿיִ-﷿ﹰ-﻿]/;
+const NUM_RE = /^[\s]*[-+(]?[$€£¥]?[\s]?[\d][\d,]*(\.\d+)?%?\)?[\s]*$/;
+function blobFromCanvas(c, type, q) { return new Promise((r) => c.toBlob(r, type, q)); }
+function readAsDataURL(blob) { return new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(f.result); f.onerror = () => rej(new Error("Could not read the file.")); f.readAsDataURL(blob); }); }
+function loadImage(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("This image could not be opened.")); i.src = src; }); }
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+/* XML-safe text (drop control chars) */
+function xmlText(s) { return esc(String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")); }
+
+/* ---------- readers: file -> intermediate model ---------- */
+function fmtNumber(v, fmt) {
+  if (!fmt || /general/i.test(fmt)) return String(Math.round(v * 1e10) / 1e10);
+  const pct = fmt.includes("%"); if (pct) v *= 100;
+  const m = fmt.match(/\.(0+)/); const dec = m ? m[1].length : 0;
+  const cur = /\$/.test(fmt) ? "$" : /€/.test(fmt) ? "€" : /£/.test(fmt) ? "£" : /¥/.test(fmt) ? "¥" : "";
+  const body = Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec, useGrouping: fmt.includes(",") });
+  return (v < 0 ? "-" : "") + cur + body + (pct ? "%" : "");
+}
+function cellText(cell) {
+  let v = cell.value;
+  if (v === null || v === undefined) return "";
+  if (v instanceof Date) { const iso = v.toISOString(); return /T00:00:00/.test(iso) ? iso.slice(0, 10) : iso.slice(0, 16).replace("T", " "); }
+  if (typeof v === "number") return fmtNumber(v, cell.numFmt);
+  if (typeof v === "boolean") return v ? "TRUE" : "FALSE";
+  if (typeof v === "object") {
+    if (v.richText) return v.richText.map((r) => r.text).join("");
+    if ("result" in v) { const r = v.result; if (r instanceof Date) return r.toISOString().slice(0, 10); return typeof r === "number" ? fmtNumber(r, cell.numFmt) : r == null ? "" : String(r); }
+    if (v.text !== undefined) return String(v.text);
+    if (v.error) return String(v.error);
+  }
+  return String(v);
+}
+function parseCSV(text) {
+  const rows = []; let row = [], cur = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ",") { row.push(cur); cur = ""; }
+    else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; }
+    else cur += ch;
+  }
+  if (cur !== "" || row.length) { row.push(cur); rows.push(row); }
+  return rows;
+}
+async function readSheets(file) {
+  if (/\.csv$/i.test(file.name)) {
+    const rows = parseCSV(await file.text());
+    return [{ name: baseName(file.name).slice(0, 31), rows }];
+  }
+  if (/\.xls$/i.test(file.name)) throw new Error("Old .xls files are not supported. Save the workbook as .xlsx in Excel and try again.");
+  await lib("exceljs");
+  const wb = new ExcelJS.Workbook();
+  try { await wb.xlsx.load(await file.arrayBuffer()); } catch (e) { throw new Error("This does not look like a valid .xlsx workbook."); }
+  const sheets = [];
+  wb.eachSheet((ws) => {
+    const rows = [];
+    const R = ws.actualRowCount ? ws.rowCount : 0, C = ws.columnCount;
+    for (let r = 1; r <= R; r++) {
+      const row = ws.getRow(r); const out = [];
+      for (let c = 1; c <= C; c++) out.push(cellText(row.getCell(c)));
+      rows.push(out);
+    }
+    while (rows.length && rows[rows.length - 1].every((x) => x === "")) rows.pop();
+    let maxC = 0; rows.forEach((r) => { for (let i = r.length - 1; i >= 0; i--) if (r[i] !== "") { maxC = Math.max(maxC, i + 1); break; } });
+    sheets.push({ name: ws.name, rows: rows.map((r) => r.slice(0, maxC)) });
+  });
+  const nonEmpty = sheets.filter((s) => s.rows.length);
+  if (!nonEmpty.length) throw new Error("This workbook has no data in it.");
+  return nonEmpty;
+}
+
+const NS_W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+const NS_R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+const kids = (el, name) => Array.from(el.children).filter((c) => c.localName === name);
+const kid = (el, name) => kids(el, name)[0] || null;
+const wAttr = (el, a) => el && (el.getAttributeNS(NS_W, a) ?? el.getAttribute("w:" + a));
+async function readDocx(file) {
+  await lib("jszip");
+  let zip;
+  try { zip = await JSZip.loadAsync(await file.arrayBuffer()); } catch (e) { throw new Error("This does not look like a valid .docx file. Old .doc files are not supported."); }
+  const docFile = zip.file("word/document.xml");
+  if (!docFile) throw new Error("This does not look like a valid .docx file.");
+  const parse = (s) => new DOMParser().parseFromString(s, "application/xml");
+  const doc = parse(await docFile.async("string"));
+  const styleNames = {};
+  const sf = zip.file("word/styles.xml");
+  if (sf) { const sd = parse(await sf.async("string")); for (const s of sd.getElementsByTagNameNS(NS_W, "style")) { const nm = kid(s, "name"); styleNames[wAttr(s, "styleId")] = (wAttr(nm, "val") || "").toLowerCase(); } }
+  const rels = {};
+  const rf = zip.file("word/_rels/document.xml.rels");
+  if (rf) { const rd = parse(await rf.async("string")); for (const r of rd.getElementsByTagName("Relationship")) rels[r.getAttribute("Id")] = r.getAttribute("Target"); }
+  const body = doc.getElementsByTagNameNS(NS_W, "body")[0];
+  const blocks = [];
+  const flag = (rPr, n) => { const e = rPr && kid(rPr, n); if (!e) return false; const v = wAttr(e, "val"); return !(v === "0" || v === "false"); };
+  async function imageFrom(drawing) {
+    const blip = drawing.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/main", "blip")[0];
+    if (!blip) return null;
+    const id = blip.getAttributeNS(NS_R, "embed") || blip.getAttribute("r:embed");
+    const t = rels[id]; if (!t) return null;
+    const f = zip.file("word/" + t.replace(/^\//, "").replace(/^word\//, ""));
+    if (!f) return null;
+    const ext = (t.split(".").pop() || "").toLowerCase();
+    if (!["png", "jpg", "jpeg", "gif", "webp", "bmp"].includes(ext)) return null;
+    const mime = ext === "jpg" ? "image/jpeg" : "image/" + ext;
+    const bytes = await f.async("uint8array");
+    const dataUrl = await readAsDataURL(new Blob([bytes], { type: mime }));
+    const img = await loadImage(dataUrl).catch(() => null);
+    if (!img) return null;
+    const extent = drawing.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing", "extent")[0];
+    let w = img.naturalWidth * 0.75, h = img.naturalHeight * 0.75;
+    if (extent) { w = (+extent.getAttribute("cx")) / 12700; h = (+extent.getAttribute("cy")) / 12700; }
+    return { type: "img", src: dataUrl, w, h };
+  }
+  async function paragraph(p) {
+    const runs = []; const imgs = []; let pb = false;
+    async function walk(node) {
+      for (const c of node.children) {
+        const n = c.localName;
+        if (n === "r") {
+          const rPr = kid(c, "rPr"); const b = flag(rPr, "b"), i = flag(rPr, "i");
+          let text = "";
+          for (const x of c.children) {
+            if (x.localName === "t") text += x.textContent;
+            else if (x.localName === "tab") text += "    ";
+            else if (x.localName === "br") { if (wAttr(x, "type") === "page") pb = true; else text += "\n"; }
+            else if (x.localName === "drawing" || x.localName === "pict") { const im = await imageFrom(x); if (im) imgs.push(im); }
+          }
+          if (text) runs.push({ text, b, i });
+        } else if (["hyperlink", "ins", "smartTag", "sdt", "sdtContent", "fldSimple"].includes(n)) await walk(c);
+      }
+    }
+    await walk(p);
+    const pPr = kid(p, "pPr");
+    const sid = pPr && kid(pPr, "pStyle") ? wAttr(kid(pPr, "pStyle"), "val") : "";
+    const sname = styleNames[sid] || (sid || "").toLowerCase();
+    let level = 0; const m = sname.match(/heading\s*(\d)/); if (m) level = Math.min(3, +m[1]); else if (sname === "title") level = 1;
+    const listed = pPr && kid(pPr, "numPr");
+    const text = runs.map((r) => r.text).join("");
+    const rtl = (pPr && kid(pPr, "bidi") !== null) || RTL_RE.test(text);
+    const out = [];
+    if (text.trim()) {
+      if (level) out.push({ type: "h", level, text: text.replace(/\s+/g, " ").trim(), rtl });
+      else { if (listed) runs.unshift({ text: "•  ", b: false, i: false }); out.push({ type: "p", runs, rtl }); }
+    }
+    for (const im of imgs) out.push(im);
+    if (pb) out.push({ type: "pb" });
+    return out;
+  }
+  async function table(t) {
+    const rows = [];
+    for (const tr of kids(t, "tr")) {
+      const row = [];
+      for (const tc of kids(tr, "tc")) {
+        const props = kid(tc, "tcPr"); const gs = props && kid(props, "gridSpan");
+        const span = gs ? Math.max(1, +wAttr(gs, "val") || 1) : 1;
+        const parts = [];
+        for (const p of tc.getElementsByTagNameNS(NS_W, "p")) parts.push(Array.from(p.getElementsByTagNameNS(NS_W, "t")).map((x) => x.textContent).join(""));
+        row.push(parts.join("\n").trim());
+        for (let k = 1; k < span; k++) row.push("");
+      }
+      rows.push(row);
+    }
+    return rows;
+  }
+  for (const el of body.children) {
+    if (el.localName === "p") blocks.push(...(await paragraph(el)));
+    else if (el.localName === "tbl") {
+      const rows = await table(el);
+      const width = Math.max(0, ...rows.map((r) => r.length));
+      rows.forEach((r) => { while (r.length < width) r.push(""); });
+      if (rows.length) blocks.push({ type: "table", rows });
+    } else if (el.localName === "sdt") {
+      const content = kid(el, "sdtContent");
+      if (content) for (const c of content.children) if (c.localName === "p") blocks.push(...(await paragraph(c)));
+    }
+  }
+  if (!blocks.length) throw new Error("This document has no readable content.");
+  return blocks;
+}
+
+async function openPdf(file) {
+  await lib("pdfjs");
+  try { return await pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise; }
+  catch (e) { throw new Error(e && e.name === "PasswordException" ? "This PDF is password protected. Remove the password and try again." : "This does not look like a valid PDF."); }
+}
+async function pdfPageItems(pdf, n) {
+  const page = await pdf.getPage(n);
+  const vp = page.getViewport({ scale: 1 });
+  const tc = await page.getTextContent();
+  const items = tc.items.filter((it) => it.str && it.str.trim() !== "").map((it) => ({
+    s: it.str, x: it.transform[4], y: it.transform[5], w: it.width, size: Math.hypot(it.transform[0], it.transform[1]) || it.height || 10,
+  }));
+  return { items, width: vp.width, height: vp.height };
+}
+function groupLines(items) {
+  const sorted = items.slice().sort((a, b) => b.y - a.y || a.x - b.x);
+  const lines = [];
+  for (const it of sorted) {
+    const last = lines[lines.length - 1];
+    if (last && Math.abs(last.y - it.y) <= Math.max(2, it.size * 0.4)) last.items.push(it);
+    else lines.push({ y: it.y, items: [it] });
+  }
+  lines.forEach((l) => { l.items.sort((a, b) => a.x - b.x); l.size = Math.max(...l.items.map((i) => i.size)); });
+  return lines;
+}
+/* a line as cells: split where the horizontal gap is wider than about one and a half characters */
+function lineCells(line) {
+  const cells = []; let cur = null;
+  for (const it of line.items) {
+    if (cur && it.x - cur.end <= Math.max(it.size * 0.9, 4)) { cur.s += (it.x - cur.end > it.size * 0.15 ? " " : "") + it.s; cur.end = it.x + it.w; }
+    else { cur = { s: it.s, x: it.x, end: it.x + it.w }; cells.push(cur); }
+  }
+  return cells;
+}
+async function pdfToBlocks(pdf, progress) {
+  const blocks = []; let any = false;
+  for (let n = 1; n <= pdf.numPages; n++) {
+    progress(n, pdf.numPages, "Reading page " + n + " of " + pdf.numPages);
+    const { items, width } = await pdfPageItems(pdf, n);
+    if (n > 1) blocks.push({ type: "pb" });
+    if (!items.length) continue;
+    any = true;
+    const lines = groupLines(items);
+    const sizes = lines.map((l) => l.size).sort((a, b) => a - b); const med = sizes[Math.floor(sizes.length / 2)] || 10;
+    const widths = lines.map((l) => l.items[l.items.length - 1].x + l.items[l.items.length - 1].w - l.items[0].x);
+    const maxW = Math.max(...widths);
+    let para = null, prev = null;
+    const flush = () => { if (para) { const t = para.text.replace(/\s+/g, " ").trim(); if (t) blocks.push(para.level ? { type: "h", level: para.level, text: t, rtl: RTL_RE.test(t) } : { type: "p", runs: [{ text: t, b: false, i: false }], rtl: RTL_RE.test(t) }); } para = null; };
+    lines.forEach((l, i) => {
+      const text = lineCells(l).map((c) => c.s).join("   ");
+      const level = l.size >= med * 1.5 ? 1 : l.size >= med * 1.2 ? 2 : 0;
+      const gap = prev ? prev.y - l.y : 0;
+      const breakBefore = !para || level || para.level || gap > Math.max(prev.size, l.size) * 1.7 || (prev && prevW < maxW * 0.6);
+      if (breakBefore) { flush(); para = { text: text, level }; } else para.text += " " + text;
+      prev = l; var prevW = widths[i];
+    });
+    flush();
+  }
+  if (!any) throw new Error("This PDF has no selectable text. It may be a scan. Convert it to JPG instead, or run it through OCR first.");
+  return blocks;
+}
+async function pdfToSheets(pdf, progress) {
+  const sheets = []; let any = false;
+  for (let n = 1; n <= pdf.numPages; n++) {
+    progress(n, pdf.numPages, "Reading page " + n + " of " + pdf.numPages);
+    const { items } = await pdfPageItems(pdf, n);
+    if (!items.length) continue;
+    any = true;
+    const lines = groupLines(items).map((l) => lineCells(l));
+    /* column anchors: x positions that recur across lines */
+    const xs = []; lines.forEach((cs) => cs.forEach((c) => xs.push(c.x))); xs.sort((a, b) => a - b);
+    const anchors = []; xs.forEach((x) => { const a = anchors[anchors.length - 1]; if (a && x - a.max <= 6) { a.max = x; a.n++; a.sum += x; } else anchors.push({ min: x, max: x, n: 1, sum: x }); });
+    const cols = anchors.filter((a) => a.n >= 2 || anchors.length <= 6).map((a) => a.sum / a.n);
+    const colOf = (x) => { let best = 0, d = 1e9; cols.forEach((c, i) => { const dd = Math.abs(c - x); if (dd < d) { d = dd; best = i; } }); return best; };
+    const rows = lines.map((cs) => {
+      if (!cols.length) return [cs.map((c) => c.s).join(" ")];
+      const row = new Array(cols.length).fill("");
+      cs.forEach((c) => { const i = colOf(c.x); row[i] = row[i] ? row[i] + " " + c.s : c.s; });
+      return row;
+    });
+    let maxC = 0; rows.forEach((r) => r.forEach((v, i) => { if (v !== "") maxC = Math.max(maxC, i + 1); }));
+    sheets.push({ name: "Page " + n, rows: rows.map((r) => r.slice(0, maxC)) });
+  }
+  if (!any) throw new Error("This PDF has no selectable text. It may be a scan. Convert it to JPG instead, or run it through OCR first.");
+  return sheets;
+}
+async function imageToCanvasJpeg(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadImage(url);
+    const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0);
+    return { canvas: c, w: c.width, h: c.height, dataUrl: c.toDataURL("image/jpeg", 0.92) };
+  } finally { URL.revokeObjectURL(url); }
+}
+</script>
+<script>
+"use strict";
+/* ---------- model helpers ---------- */
+const WARN = [];
+function warnOnce(m) { if (!WARN.includes(m)) WARN.push(m); }
+function padRows(rows) { const w = Math.max(1, ...rows.map((r) => r.length)); return rows.map((r) => { const o = r.slice(); while (o.length < w) o.push(""); return o; }); }
+function sheetsToBlocks(sheets) {
+  const b = [];
+  sheets.forEach((s, i) => { if (i) b.push({ type: "pb" }); b.push({ type: "h", level: 2, text: s.name }); b.push({ type: "table", header: true, rows: padRows(s.rows.length ? s.rows : [[""]]) }); });
+  return b;
+}
+function blocksToSheets(blocks) {
+  const sheets = []; const text = []; let n = 0;
+  blocks.forEach((b) => {
+    if (b.type === "table") sheets.push({ name: "Table " + ++n, rows: b.rows });
+    else if (b.type === "h") text.push([b.text]);
+    else if (b.type === "p") text.push([b.runs.map((r) => r.text).join("")]);
+  });
+  if (text.length) sheets.unshift({ name: "Text", rows: text });
+  if (!sheets.length) throw new Error("There is no text or table in this document to put in a spreadsheet.");
+  return sheets;
+}
+async function normImg(src) {
+  if (/^data:image\/(jpeg|png);/.test(src)) return src;
+  const img = await loadImage(src);
+  const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0);
+  return c.toDataURL("image/png");
+}
+
+/* ---------- DOCX writer ---------- */
+async function blocksToDocx(blocks) {
+  await lib("jszip");
+  const zip = new JSZip(); const rels = []; let imgN = 0; let exts = new Set();
+  const runXml = (text, b, i, rtl) => {
+    const rpr = (b ? "<w:b/>" : "") + (i ? "<w:i/>" : "") + (rtl ? "<w:rtl/>" : "");
+    return String(text).split("\n").map((part, k) => (k ? "<w:r><w:br/></w:r>" : "") + '<w:r>' + (rpr ? "<w:rPr>" + rpr + "</w:rPr>" : "") + '<w:t xml:space="preserve">' + xmlText(part) + "</w:t></w:r>").join("");
+  };
+  const para = (inner, style, rtl) => "<w:p><w:pPr>" + (style ? '<w:pStyle w:val="' + style + '"/>' : "") + (rtl ? "<w:bidi/>" : "") + "</w:pPr>" + inner + "</w:p>";
+  let body = "";
+  for (const b of blocks) {
+    if (b.type === "h") body += para(runXml(b.text, false, false, b.rtl), "Heading" + (b.level || 1), b.rtl);
+    else if (b.type === "p") body += para(b.runs.map((r) => runXml(r.text, r.b, r.i, b.rtl)).join(""), "", b.rtl);
+    else if (b.type === "pb") body += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+    else if (b.type === "table") {
+      const n = b.rows[0].length; const wd = Math.floor(9638 / n);
+      const bd = ["top", "left", "bottom", "right", "insideH", "insideV"].map((s) => "<w:" + s + ' w:val="single" w:sz="4" w:space="0" w:color="999999"/>').join("");
+      body += '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>' + bd + '</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>' + '<w:gridCol w:w="' + wd + '"/>'.repeat(n) + "</w:tblGrid>";
+      b.rows.forEach((r, ri) => {
+        body += "<w:tr>";
+        r.forEach((cell) => {
+          const hd = b.header && ri === 0;
+          const ps = String(cell).split("\n").map((l) => para(runXml(l, hd, false, RTL_RE.test(l)), "", RTL_RE.test(l))).join("");
+          body += '<w:tc><w:tcPr><w:tcW w:w="' + wd + '" w:type="dxa"/>' + (hd ? '<w:shd w:val="clear" w:color="auto" w:fill="EDEFF2"/>' : "") + "</w:tcPr>" + ps + "</w:tc>";
+        });
+        body += "</w:tr>";
+      });
+      body += "</w:tbl><w:p/>";
+    } else if (b.type === "img") {
+      const src = await normImg(b.src); const isPng = src.startsWith("data:image/png");
+      const ext = isPng ? "png" : "jpg"; exts.add(ext);
+      const id = "rId" + (100 + ++imgN);
+      zip.file("word/media/image" + imgN + "." + ext, src.split(",")[1], { base64: true });
+      rels.push('<Relationship Id="' + id + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image' + imgN + "." + ext + '"/>');
+      let w = b.w, h = b.h; const max = 470; if (w > max) { h = h * max / w; w = max; }
+      const cx = Math.round(w * 12700), cy = Math.round(h * 12700);
+      body += '<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' + cx + '" cy="' + cy + '"/><wp:docPr id="' + imgN + '" name="Picture ' + imgN + '"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="' + imgN + '" name="image' + imgN + "." + ext + '"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="' + id + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+    }
+  }
+  const X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  zip.file("[Content_Types].xml", X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' + (exts.has("jpg") ? '<Default Extension="jpg" ContentType="image/jpeg"/>' : "") + (exts.has("png") ? '<Default Extension="png" ContentType="image/png"/>' : "") + '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>');
+  zip.file("_rels/.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+  zip.file("word/_rels/document.xml.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' + rels.join("") + "</Relationships>");
+  const hs = (id, nm, sz) => '<w:style w:type="paragraph" w:styleId="' + id + '"><w:name w:val="' + nm + '"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:spacing w:before="240" w:after="80"/></w:pPr><w:rPr><w:b/><w:sz w:val="' + sz + '"/></w:rPr></w:style>';
+  zip.file("word/styles.xml", X + '<w:styles xmlns:w="' + NS_W + '"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Arial"/><w:sz w:val="22"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>' + hs("Heading1", "heading 1", 36) + hs("Heading2", "heading 2", 30) + hs("Heading3", "heading 3", 26) + "</w:styles>");
+  zip.file("word/document.xml", X + '<w:document xmlns:w="' + NS_W + '" xmlns:r="' + NS_R + '" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>' + body + '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>');
+  return zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+}
+
+/* ---------- PDF writer ---------- */
+function pdfClean(s) {
+  s = String(s).replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, "-").replace(/•/g, "-").replace(/…/g, "...").replace(/€/g, "EUR ").replace(/\t/g, "    ");
+  if (/[^\u0009\u000A -~ -ÿ]/.test(s)) { warnOnce("Some characters outside the Latin alphabet cannot be drawn in the PDF and appear as ?."); s = s.replace(/[^\u0009\u000A -~ -ÿ]/g, "?"); }
+  return s;
+}
+async function blocksToPdf(blocks) {
+  await lib("jspdf");
+  const { jsPDF } = window.jspdf;
+  const maxCols = Math.max(0, ...blocks.filter((b) => b.type === "table").map((b) => b.rows[0].length));
+  const doc = new jsPDF({ unit: "pt", format: "a4", orientation: maxCols > 6 ? "landscape" : "portrait" });
+  const PW = doc.internal.pageSize.getWidth(), PH = doc.internal.pageSize.getHeight(), M = 44, CW = PW - 2 * M;
+  let y = M;
+  const ensure = (h) => { if (y + h > PH - M) { doc.addPage(); y = M; } };
+  for (const b of blocks) {
+    if (b.type === "pb") { if (y > M) { doc.addPage(); y = M; } }
+    else if (b.type === "h") {
+      const sz = { 1: 20, 2: 16, 3: 13 }[b.level] || 13, lh = sz * 1.3;
+      doc.setFont("helvetica", "bold"); doc.setFontSize(sz);
+      const lines = doc.splitTextToSize(pdfClean(b.text), CW);
+      if (y > M) y += 8; ensure(lh * lines.length + 4);
+      lines.forEach((l) => { doc.text(l, M, y + sz); y += lh; }); y += 4;
+    } else if (b.type === "p") {
+      const all = (k) => b.runs.length && b.runs.every((r) => r[k]);
+      doc.setFont("helvetica", all("b") ? "bold" : all("i") ? "italic" : "normal"); doc.setFontSize(11);
+      const lines = doc.splitTextToSize(pdfClean(b.runs.map((r) => r.text).join("")), CW);
+      lines.forEach((l) => { ensure(15); doc.text(l, M, y + 11); y += 15; }); y += 6;
+    } else if (b.type === "table") {
+      const n = b.rows[0].length, fs = n > 10 ? 6.5 : n > 7 ? 8 : 9.5, lh = fs * 1.25, pad = 4;
+      const wt = []; for (let c = 0; c < n; c++) wt.push(Math.min(40, Math.max(4, ...b.rows.map((r) => String(r[c]).length))));
+      const sum = wt.reduce((a, v) => a + v, 0); const cw = wt.map((v) => CW * v / sum);
+      for (let ri = 0; ri < b.rows.length; ri++) {
+        const hd = b.header && ri === 0;
+        doc.setFont("helvetica", hd ? "bold" : "normal"); doc.setFontSize(fs);
+        let cells = b.rows[ri].map((v, c) => doc.splitTextToSize(pdfClean(v), Math.max(10, cw[c] - 2 * pad)));
+        const maxLines = Math.floor((PH - 2 * M - 2 * pad) / lh);
+        cells = cells.map((l) => l.length > maxLines ? l.slice(0, maxLines) : l);
+        const rh = Math.max(...cells.map((l) => l.length), 1) * lh + 2 * pad;
+        ensure(rh);
+        let x = M;
+        cells.forEach((lines, c) => {
+          doc.setDrawColor(150); doc.setLineWidth(0.4);
+          if (hd) { doc.setFillColor(237, 239, 242); doc.rect(x, y, cw[c], rh, "FD"); } else doc.rect(x, y, cw[c], rh);
+          const numeric = NUM_RE.test(String(b.rows[ri][c])) && !hd;
+          lines.forEach((l, k) => { if (numeric) doc.text(l, x + cw[c] - pad, y + pad + fs + k * lh - 1, { align: "right" }); else doc.text(l, x + pad, y + pad + fs + k * lh - 1); });
+          x += cw[c];
+        });
+        y += rh;
+      }
+      y += 10;
+    } else if (b.type === "img") {
+      const src = await normImg(b.src);
+      let w = Math.min(CW, b.w), h = b.h * w / b.w; const maxH = PH - 2 * M; if (h > maxH) { w = w * maxH / h; h = maxH; }
+      ensure(h); doc.addImage(src, src.startsWith("data:image/png") ? "PNG" : "JPEG", M, y, w, h); y += h + 8;
+    }
+  }
+  return doc.output("blob");
+}
+async function imagesToPdf(files, progress) {
+  await lib("jspdf");
+  const { jsPDF } = window.jspdf; let doc = null;
+  for (let i = 0; i < files.length; i++) {
+    progress(i + 1, files.length, "Adding image " + (i + 1) + " of " + files.length);
+    const im = await imageToCanvasJpeg(files[i]);
+    const land = im.w > im.h; const PW = land ? 842 : 595, PH = land ? 595 : 842, M = 20;
+    if (!doc) doc = new jsPDF({ unit: "pt", format: "a4", orientation: land ? "landscape" : "portrait" }); else doc.addPage("a4", land ? "landscape" : "portrait");
+    const s = Math.min((PW - 2 * M) / im.w, (PH - 2 * M) / im.h); const w = im.w * s, h = im.h * s;
+    doc.addImage(im.dataUrl, "JPEG", (PW - w) / 2, (PH - h) / 2, w, h);
+    await tick();
+  }
+  return doc.output("blob");
+}
+
+/* ---------- PDF -> JPG ---------- */
+async function pdfToJpgs(pdf, dpi, base, progress) {
+  const out = [];
+  for (let n = 1; n <= pdf.numPages; n++) {
+    progress(n, pdf.numPages, "Drawing page " + n + " of " + pdf.numPages);
+    const page = await pdf.getPage(n);
+    let scale = dpi / 72; const v1 = page.getViewport({ scale: 1 });
+    if (v1.width * v1.height * scale * scale > 40e6) scale = Math.sqrt(40e6 / (v1.width * v1.height));
+    const vp = page.getViewport({ scale });
+    const c = document.createElement("canvas"); c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+    await page.render({ canvasContext: g, viewport: vp }).promise;
+    const blob = await blobFromCanvas(c, "image/jpeg", 0.92);
+    out.push({ name: pdf.numPages === 1 ? base + ".jpg" : base + "-page-" + String(n).padStart(2, "0") + ".jpg", blob, kind: "jpg" });
+    c.width = c.height = 0;
+  }
+  return out;
+}
+
+/* ---------- XLSX writer ---------- */
+function toCell(v) {
+  if (v === "" || v == null) return null;
+  const s = String(v).trim();
+  if (/^-?(0|[1-9]\d{0,14})(\.\d+)?$/.test(s)) return Number(s);
+  return String(v);
+}
+async function sheetsToXlsx(sheets, images) {
+  await lib("exceljs");
+  const wb = new ExcelJS.Workbook(); const used = new Set();
+  const uniq = (raw) => { let base = String(raw || "Sheet").replace(/[\[\]:*?\/\\]/g, " ").trim().slice(0, 28) || "Sheet", nm = base, k = 2; while (used.has(nm.toLowerCase())) nm = base + " " + k++; used.add(nm.toLowerCase()); return nm; };
+  sheets.forEach((s) => {
+    const ws = wb.addWorksheet(uniq(s.name));
+    s.rows.forEach((r) => ws.addRow(r.map(toCell)));
+    const w = Math.max(0, ...s.rows.map((r) => r.length));
+    for (let c = 0; c < w; c++) { const len = Math.max(...s.rows.map((r) => String(r[c] || "").length)); ws.getColumn(c + 1).width = Math.min(50, Math.max(8, len + 2)); }
+    const first = s.rows[0] || [];
+    if (first.some((v) => v !== "") && first.every((v) => v === "" || toCell(v) === String(v))) { ws.getRow(1).font = { bold: true }; ws.views = [{ state: "frozen", ySplit: 1 }]; }
+  });
+  (images || []).forEach((im, i) => {
+    const ws = wb.addWorksheet(uniq(images.length > 1 ? "Original " + (i + 1) : "Original"));
+    const id = wb.addImage({ base64: im.dataUrl, extension: "jpeg" });
+    const sc = Math.min(1, 900 / im.w);
+    ws.addImage(id, { tl: { col: 0, row: 0 }, ext: { width: Math.round(im.w * sc), height: Math.round(im.h * sc) } });
+  });
+  const buf = await wb.xlsx.writeBuffer();
+  return new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+
+/* ---------- Image -> text through Claude ---------- */
+
+function ocrPrompt(mode) {
+  if (mode === "register") return 'This is a photo of a handwritten register or table. It may be sideways or tilted, so read it in the upright direction. Reply with only JSON: {"tables":[{"name":"short sheet name","rows":[["cell","cell"]]}]}. Include the header rows. Keep one row per line of the page and keep the same column order. Write each cell exactly as handwritten, for example times like 7:55. Use an empty string for a blank cell. If a cell only has a signature or scribble, write "Signed". Keep notes such as Sunday or C-Leave as written. Never invent values. If a value is unclear, add a question mark after it. Every cell is a string.';
+  const prompt = mode === "table"
+    ? 'This image shows a table, spreadsheet or document. Transcribe it exactly as printed. Reply with only JSON: {"tables":[{"name":"short sheet name","rows":[["cell","cell"]]}]}. Use one table per distinct table in the image, every cell a string. If the image has no table, return one table named "Text" with one line of text per row. Do not add, correct or summarise anything.'
+    : 'This image shows a document. Transcribe it exactly as printed, in reading order. Reply with only JSON: {"blocks":[{"type":"h","level":1,"text":"heading"},{"type":"p","text":"paragraph"},{"type":"table","rows":[["cell","cell"]]}]}. Heading level is 1, 2 or 3. Do not add, correct or summarise anything.';
+  return (mode === "register" ? prompt : prompt) + " The text may be handwritten, so read it carefully. Keep the same rows and columns as the page. Leave a cell as an empty string if it is blank. Do not invent text.";
+}
+window.setProgressFn = (n, m) => setProgress(n, m);
+function getAiKey() { try { return (localStorage.getItem("cd-aikey") || "").trim(); } catch (e) { return ""; } }
+function blobToB64(b) { return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(",")[1]); fr.onerror = rej; fr.readAsDataURL(b); }); }
+async function ocrGemini(file, mode, key) {
+  const setProgress = (n, m) => (window.__tp ? tProg : window.setProgressFn)(n, m);
+  key = String(key || "").replace(/[\s"'`]/g, "");
+  if (!/^AIza[0-9A-Za-z_-]{35}$/.test(key)) throw new Error("This does not look like a Google AI key. A real key starts with AIza and has 39 characters. What you pasted has " + key.length + " characters and starts with \"" + key.slice(0, 4) + "\". Open the key in AI Studio and copy the whole key again.");
+  setProgress(0.15, "Preparing the picture");
+  const im = await imageToCanvasJpeg(file); let c = im.canvas; const MAX = 2000;
+  if (Math.max(c.width, c.height) > MAX) { const s = MAX / Math.max(c.width, c.height), n = document.createElement("canvas"); n.width = Math.round(c.width * s); n.height = Math.round(c.height * s); n.getContext("2d").drawImage(c, 0, 0, n.width, n.height); c = n; }
+  const b64 = await blobToB64(await blobFromCanvas(c, "image/jpeg", 0.9));
+  const body = JSON.stringify({ contents: [{ parts: [{ text: ocrPrompt(mode) }, { inline_data: { mime_type: "image/jpeg", data: b64 } }] }], generationConfig: { temperature: 0, responseMimeType: "application/json" } });
+  let lastErr = "";
+  for (const model of ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"]) {
+    setProgress(0.4, "Reading with the AI reader");
+    let r; try { r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(key), { method: "POST", headers: { "Content-Type": "application/json" }, body }); }
+    catch (e) { throw new Error("No internet connection to the AI reader. Check your internet and try again."); }
+    if (r.status === 400 || r.status === 403) { let t = ""; try { t = (await r.json()).error.message; } catch (e) {} if (/API key not valid|API_KEY_INVALID|expired|leaked/i.test(t)) throw new Error("Google did not accept the key: " + t.slice(0, 220)); lastErr = (t || "HTTP " + r.status).slice(0, 220); continue; }
+    if (r.status === 404) { lastErr = "model not found"; continue; }
+    if (r.status === 429) throw new Error("The free AI limit is used up for now. Wait a minute and try again.");
+    if (!r.ok) { lastErr = "HTTP " + r.status; continue; }
+    const j = await r.json(); const parts = j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
+    const txt = parts && parts.map((p) => p.text || "").join("");
+    if (!txt) { lastErr = "empty answer"; continue; }
+    try { return JSON.parse(txt.replace(/^\s*```(?:json)?/i, "").replace(/```\s*$/, "").trim()); } catch (e) { lastErr = "unreadable answer"; continue; }
+  }
+  throw new Error("The AI reader did not answer. Google said: " + lastErr);
+}
+async function ocrImage(file, mode) {
+  if (typeof claude === "undefined" && getAiKey()) return ocrGemini(file, mode, getAiKey());
+  const sample = typeof claude === "undefined" ? null : await claude.use("sample");
+  const caps = sample ? await sample.limits().catch(() => null) : null;
+  if (!sample || !caps || !caps.images) return ocrLocal(file, mode);
+  let blob = file;
+  if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) blob = await blobFromCanvas((await imageToCanvasJpeg(file)).canvas, "image/jpeg", 0.92);
+  const prompt = mode === "table"
+    ? 'This image shows a table, spreadsheet or document. Transcribe it exactly as printed. Reply with only JSON: {"tables":[{"name":"short sheet name","rows":[["cell","cell"]]}]}. Use one table per distinct table in the image, every cell a string. If the image has no table, return one table named "Text" with one line of text per row. Do not add, correct or summarise anything.'
+    : 'This image shows a document. Transcribe it exactly as printed, in reading order. Reply with only JSON: {"blocks":[{"type":"h","level":1,"text":"heading"},{"type":"p","text":"paragraph"},{"type":"table","rows":[["cell","cell"]]}]}. Heading level is 1, 2 or 3. Do not add, correct or summarise anything.';
+  try { return await sample.json(prompt, { images: blob }); }
+  catch (e) {
+    const m = { not_granted: "Permission to read the picture was declined.", rate_limited: "Too many requests right now. Wait a moment and try again.", image_rejected: "This image could not be sent. Try a smaller JPG or PNG.", invalid_json: "The text in the picture could not be read into a clean result. Try again, or turn off the text option." };
+    throw new Error(m[e && e.code] || "Reading the picture failed. Try again, or turn off the text option.");
+  }
+}
+function ocrToSheets(d) {
+  const t = d && Array.isArray(d.tables) ? d.tables : [];
+  const out = t.filter((x) => x && Array.isArray(x.rows) && x.rows.length).map((x) => ({ name: String(x.name || "Sheet"), rows: padRows(x.rows.map((r) => (Array.isArray(r) ? r : [r]).map((v) => (v == null ? "" : String(v))))) }));
+  if (!out.length) throw new Error("No text or table was found in the picture.");
+  return out;
+}
+function ocrToBlocks(d) {
+  const b = d && Array.isArray(d.blocks) ? d.blocks : [];
+  const out = [];
+  b.forEach((x) => {
+    if (!x) return;
+    if (x.type === "h" && x.text) out.push({ type: "h", level: Math.min(3, Math.max(1, +x.level || 1)), text: String(x.text), rtl: RTL_RE.test(x.text) });
+    else if (x.type === "p" && x.text) out.push({ type: "p", runs: [{ text: String(x.text), b: false, i: false }], rtl: RTL_RE.test(x.text) });
+    else if (x.type === "table" && Array.isArray(x.rows) && x.rows.length) out.push({ type: "table", rows: padRows(x.rows.map((r) => (Array.isArray(r) ? r : [r]).map((v) => (v == null ? "" : String(v))))) });
+  });
+  if (!out.length) throw new Error("No text was found in the picture.");
+  return out;
+}
+</script>
+<script>
+"use strict";
+/* ---------- state and copy ---------- */
+const FORMATS = {
+  xlsx: { tag: "XLSX", name: "Excel", accept: ".xlsx,.csv", exts: ["xlsx", "csv"], hint: ".xlsx or .csv", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+  docx: { tag: "DOCX", name: "Word", accept: ".docx", exts: ["docx"], hint: ".docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+  pdf: { tag: "PDF", name: "PDF", accept: ".pdf", exts: ["pdf"], hint: ".pdf", mime: "application/pdf" },
+  jpg: { tag: "JPG", name: "Image", accept: ".jpg,.jpeg,.png,.webp", exts: ["jpg", "jpeg", "png", "webp"], hint: ".jpg, .png or .webp", mime: "image/jpeg" },
+};
+const ORDER = ["xlsx", "docx", "pdf", "jpg"];
+const NOTES = {
+  "xlsx>docx": "Each sheet becomes a heading followed by its table.",
+  "xlsx>pdf": "Each sheet is laid out as a table. Wide sheets switch to landscape.",
+  "xlsx>jpg": "The sheets are laid out as PDF pages first, then saved as one JPG per page.",
+  "docx>xlsx": "Tables become sheets. Other text goes on a Text sheet.",
+  "docx>pdf": "Headings, text, tables and pictures carry over. Fonts and page layout are simplified.",
+  "docx>jpg": "The document is laid out as PDF pages first, then saved as one JPG per page.",
+  "pdf>xlsx": "Text is placed in columns by its position on the page, one sheet per page. Needs a PDF with selectable text.",
+  "pdf>docx": "Headings and text are rebuilt from the PDF. Page layout and pictures are not kept. Needs selectable text.",
+  "pdf>jpg": "One JPG per page. Pick the image quality below.",
+  "jpg>xlsx": "The text and tables in the picture are read into sheets. With the option off, the picture is placed on its own sheet.",
+  "jpg>docx": "The text in the picture is read into a Word document. With the option off, the picture is placed on the page.",
+  "jpg>pdf": "Each image becomes one page. Choose several images to make a multi-page PDF.",
+};
+let from = "xlsx", to = "pdf", files = [], busy = false, downloads = null, objectUrls = [], lastOuts = [];
+
+/* ---------- ui ---------- */
+function buildTiles() {
+  [["from", from], ["to", to]].forEach(([id, cur]) => {
+    const box = $(id); box.textContent = "";
+    ORDER.forEach((k) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "tile"; b.dataset.f = k; b.setAttribute("aria-pressed", String(k === cur));
+      b.innerHTML = "<b>" + FORMATS[k].tag + "</b><span>" + FORMATS[k].name + "</span>";
+      if (id === "to" && k === from) b.disabled = true;
+      if (id === "from" && k === to && false) b.disabled = true;
+      b.onclick = () => { if (busy) return; if (id === "from") setFrom(k); else { to = k; refresh(); } };
+      box.appendChild(b);
+    });
+  });
+}
+function setFrom(k) {
+  if (k !== from) { from = k; files = []; resetResult(); }
+  if (to === from) to = ORDER.find((x) => x !== from);
+  refresh();
+}
+let lastRoute = "";
+function drawRoute() {
+  const key = from + ">" + to;
+  [["rt-from", from], ["rt-to", to]].forEach(([id, k]) => {
+    const el = $(id); if (!el) return; el.firstChild.textContent = FORMATS[k].tag; el.lastChild.textContent = FORMATS[k].name;
+    if (lastRoute && !lastRoute.includes(k + (id === "rt-from" ? ">" : "")) ) { el.classList.remove("flip"); void el.offsetWidth; el.classList.add("flip"); }
+  });
+  lastRoute = key;
+}
+function refresh() {
+  buildTiles(); drawRoute();
+  document.documentElement.style.setProperty("--from-c", "var(--" + from + ")"); document.documentElement.style.setProperty("--to-c", "var(--" + to + ")");
+  $("note").textContent = NOTES[from + ">" + to];
+  const F = FORMATS[from];
+  $("file").accept = F.accept; $("file").multiple = from === "jpg";
+  $("drop-text").innerHTML = (matchMedia("(pointer: coarse)").matches ? "Tap to choose " : "Drop ") + (from === "jpg" ? "images" : "a file") + (matchMedia("(pointer: coarse)").matches ? ". Accepts " : " here. Accepts ") + "<span class=\"ext\">" + F.hint + "</span>.";
+  $("pick").textContent = from === "jpg" ? "Choose images" : "Choose file";
+  const list = $("files"); list.textContent = ""; list.hidden = !files.length;
+  files.forEach((f, i) => {
+    const li = document.createElement("li");
+    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = f.name;
+    const sz = document.createElement("span"); sz.className = "sz"; sz.textContent = fmtSize(f.size);
+    const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.setAttribute("aria-label", "Remove " + f.name);
+    x.onclick = () => { if (busy) return; files.splice(i, 1); refresh(); };
+    li.append(nm, sz, x); list.appendChild(li);
+  });
+  const ocr = from === "jpg" && (to === "xlsx" || to === "docx");
+  $("opt-ocr").hidden = !ocr; $("opt-lang").hidden = !((ocr || (from === "pdf" && (to === "xlsx" || to === "docx"))) && typeof claude === "undefined"); $("opt-ai").hidden = $("opt-lang").hidden; $("opt-dpi").hidden = to !== "jpg";
+  $("opts").hidden = !ocr && to !== "jpg";
+  $("go").disabled = busy || !files.length;
+  $("go").textContent = "Convert to " + FORMATS[to].tag;
+}
+function setStatus(msg, err) { const s = $("status"); s.hidden = !msg; s.textContent = msg || ""; s.classList.toggle("err", !!err); }
+function setProgress(f, msg) { $("bar").hidden = f == null; $("bar-i").style.width = Math.round((f || 0) * 100) + "%"; if (msg) setStatus(msg); }
+function resetResult() { objectUrls.forEach((u) => URL.revokeObjectURL(u)); objectUrls = []; lastOuts = []; $("result").hidden = true; $("result").textContent = ""; }
+function addFiles(list) {
+  const F = FORMATS[from]; const ok = [];
+  for (const f of Array.from(list)) {
+    const ext = (f.name.split(".").pop() || "").toLowerCase();
+    if (!F.exts.includes(ext)) { setStatus("“" + f.name + "” is not a " + F.hint + " file. Choose a file of the From type, or change the From format above.", true); continue; }
+    ok.push(f);
+  }
+  if (!ok.length) return;
+  setStatus(""); resetResult();
+  files = from === "jpg" ? files.concat(ok) : [ok[0]];
+  refresh();
+}
+
+/* ---------- conversion ---------- */
+
+const blocksHaveText = (bl) => bl.some((b) => (b.type === "p" && b.runs && b.runs.some((r) => (r.text || "").trim())) || (b.type === "h" && (b.text || "").trim()) || (b.type === "table" && b.rows && b.rows.some((r) => r.some((c) => String(c || "").trim()))));
+const sheetsHaveText = (sh) => sh.some((s) => s.rows && s.rows.some((r) => r.some((c) => String(c == null ? "" : c).trim())));
+async function pdfPagesAsFiles(pdf, prog) { const pages = await pdfToJpgs(pdf, 170, "scan", prog); return pages.map((p) => new File([p.blob], p.name, { type: "image/jpeg" })); }
+async function convert() {
+  if (busy || !files.length) return;
+  busy = true; resetResult(); WARN.length = 0; refresh(); setProgress(0, "Starting");
+  const prog = (n, t, msg) => setProgress(n / t * 0.9, msg);
+  try {
+    const base = baseName(files[0].name); const dpi = +$("dpi").value; const useOcr = $("ocr").checked;
+    let outs = [];
+    let sheets = null, blocks = null, pdf = null;
+    setProgress(0.05, "Reading " + files[0].name);
+    if (from === "xlsx") sheets = await readSheets(files[0]);
+    else if (from === "docx") blocks = await readDocx(files[0]);
+    else if (from === "pdf") pdf = await openPdf(files[0]);
+    const one = (name, blob, kind) => outs.push({ name, blob, kind });
+    if (to === "pdf") {
+      setProgress(0.4, "Building the PDF");
+      const blob = from === "jpg" ? await imagesToPdf(files, prog) : await blocksToPdf(from === "xlsx" ? sheetsToBlocks(sheets) : blocks);
+      one(base + ".pdf", blob, "pdf");
+    } else if (to === "docx") {
+      let bl;
+      if (from === "xlsx") bl = sheetsToBlocks(sheets);
+      else if (from === "pdf") {
+        bl = await pdfToBlocks(pdf, prog);
+        if (!blocksHaveText(bl) && typeof claude === "undefined") {
+          setProgress(0.3, "This PDF is a scan. Reading the text from the pages"); const pg = await pdfPagesAsFiles(pdf, prog); bl = [];
+          for (let i = 0; i < pg.length; i++) { setProgress(0.3 + 0.6 * i / pg.length, "Reading page " + (i + 1) + " of " + pg.length); if (i) bl.push({ type: "pb" }); bl.push(...ocrToBlocks(await ocrImage(pg[i], "doc"))); }
+        }
+      }
+      else {
+        bl = [];
+        for (let i = 0; i < files.length; i++) {
+          setProgress(0.1 + 0.8 * i / files.length, files.length > 1 ? "Reading image " + (i + 1) + " of " + files.length : "Reading the picture");
+          if (i) bl.push({ type: "pb" });
+          if (useOcr) { (await photoQuality(files[i])).forEach((w) => { if (!WARN.includes(w)) WARN.push(w); }); bl.push(...ocrToBlocks(await ocrImage(files[i], "doc"))); }
+          else { const im = await imageToCanvasJpeg(files[i]); bl.push({ type: "img", src: im.dataUrl, w: im.w * 0.75, h: im.h * 0.75 }); }
+        }
+      }
+      setProgress(0.92, "Building the Word file");
+      one(base + ".docx", await blocksToDocx(bl), "docx");
+    } else if (to === "xlsx") {
+      let sh, imgs = [];
+      if (from === "docx") sh = blocksToSheets(blocks);
+      else if (from === "pdf") {
+        sh = await pdfToSheets(pdf, prog);
+        if (!sheetsHaveText(sh) && typeof claude === "undefined") {
+          setProgress(0.3, "This PDF is a scan. Reading the text from the pages"); const pg = await pdfPagesAsFiles(pdf, prog); sh = [];
+          for (let i = 0; i < pg.length; i++) { setProgress(0.3 + 0.6 * i / pg.length, "Reading page " + (i + 1) + " of " + pg.length); const t = ocrToSheets(await ocrImage(pg[i], "table")); t.forEach((s) => sh.push(pg.length > 1 ? { name: "P" + (i + 1) + " " + s.name, rows: s.rows } : s)); }
+        }
+      }
+      else {
+        sh = [];
+        for (let i = 0; i < files.length; i++) {
+          setProgress(0.1 + 0.8 * i / files.length, files.length > 1 ? "Reading image " + (i + 1) + " of " + files.length : "Reading the picture");
+          const im = await imageToCanvasJpeg(files[i]);
+          if (useOcr) { (await photoQuality(files[i])).forEach((w) => { if (!WARN.includes(w)) WARN.push(w); }); const t = ocrToSheets(await ocrImage(files[i], "table")); t.forEach((s) => sh.push(files.length > 1 ? { name: "Img" + (i + 1) + " " + s.name, rows: s.rows } : s)); imgs.push(im); }
+          else imgs.push(im);
+        }
+      }
+      setProgress(0.92, "Building the Excel file");
+      one(base + ".xlsx", await sheetsToXlsx(sh, imgs), "xlsx");
+    } else if (to === "jpg") {
+      if (from !== "pdf") {
+        setProgress(0.2, "Laying out pages");
+        const pb = await blocksToPdf(from === "xlsx" ? sheetsToBlocks(sheets) : blocks);
+        pdf = await openPdf(pb);
+      }
+      outs = await pdfToJpgs(pdf, dpi, base, prog);
+    }
+    setProgress(1, "Done");
+    lastOuts = outs; showResult(outs, base);
+    setTimeout(() => { setProgress(null); setStatus(""); }, 400);
+  } catch (e) {
+    setProgress(null); setStatus((e && e.message) || "The conversion failed. Try another file.", true);
+  } finally { busy = false; refresh(); }
+}
+
+/* ---------- result ---------- */
+async function saveToPhone(name, data, st) {
+  if (downloads) { try { await downloads.save({ filename: name, data }); st("Saved " + name); } catch (e) { if (e && e.code !== "declined") st("The file could not be saved.", true); } return; }
+  const u = URL.createObjectURL(data), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 8000);
+  st("Saved to your phone: " + name + ". Open your Downloads folder or the Files app to find it.");
+}
+async function phoneSave(name, data) {
+  try {
+    if (navigator.canShare && matchMedia("(pointer: coarse)").matches) {
+      const file = new File([data], name, { type: data.type || "application/octet-stream" });
+      if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); return true; }
+    }
+  } catch (e) { if (e && e.name === "AbortError") return true; }
+  return false;
+}
+async function save(name, data) {
+  if (!downloads && await phoneSave(name, data)) return;
+  if (!downloads) { const u = URL.createObjectURL(data), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); setStatus("Saved " + name); return; }
+  try { await downloads.save({ filename: name, data }); setStatus("Saved " + name); }
+  catch (e) { if (e && e.code !== "declined") setStatus("The file could not be saved (" + ((e && e.code) || "error") + ").", true); }
+}
+function showResult(outs, base) {
+  const box = $("result"); box.textContent = ""; box.hidden = false;
+  const tag = document.createElement("div"); tag.className = "res-head";
+  const t = document.createElement("span"); t.className = "res-tag"; t.style.setProperty("--c", "var(--" + (to === "jpg" ? "jpg" : to) + ")"); t.textContent = FORMATS[to].tag;
+  const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = outs.length === 1 ? outs[0].name : outs.length + " images from " + files[0].name;
+  const total = outs.reduce((a, o) => a + o.blob.size, 0);
+  const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = fmtSize(total);
+  tag.append(t, nm, meta); box.appendChild(tag);
+  WARN.forEach((w) => { const p = document.createElement("p"); p.className = "note"; p.textContent = w; box.appendChild(p); });
+  if (to === "jpg") {
+    const grid = document.createElement("div"); grid.className = "thumbs";
+    outs.forEach((o) => {
+      const u = URL.createObjectURL(o.blob); objectUrls.push(u);
+      const fig = document.createElement("figure"); const im = document.createElement("img"); im.src = u; im.alt = o.name; im.loading = "lazy";
+      const cap = document.createElement("figcaption"); const s = document.createElement("span"); s.textContent = fmtSize(o.blob.size);
+      const b = document.createElement("button"); b.type = "button"; b.className = "link"; b.textContent = "Save"; b.onclick = () => save(o.name, o.blob);
+      cap.append(s, b); fig.append(im, cap); grid.appendChild(fig);
+    });
+    box.appendChild(grid);
+  }
+  const row = document.createElement("div"); row.className = "row";
+  const dl = document.createElement("button"); dl.type = "button"; dl.className = "btn";
+  if (outs.length === 1) { dl.textContent = "Save to phone"; dl.onclick = () => saveToPhone(outs[0].name, outs[0].blob, setStatus); }
+  else {
+    dl.textContent = "Save all to phone (ZIP)";
+    dl.onclick = async () => { await lib("jszip"); const z = new JSZip(); outs.forEach((o) => z.file(o.name, o.blob)); saveToPhone(base + "-pages.zip", await z.generateAsync({ type: "blob" }), setStatus); };
+  }
+  const again = document.createElement("button"); again.type = "button"; again.className = "btn ghost"; again.textContent = "Convert another";
+  again.onclick = () => { files = []; resetResult(); setStatus(""); refresh(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  row.append(dl, shareBtn(outs, setStatus), again); box.appendChild(row);
+  box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+
+async function shareFiles(outs, st) {
+  try {
+    const fl = outs.map((o) => new File([o.blob], o.name, { type: o.blob.type || "application/octet-stream" }));
+    if (navigator.canShare && navigator.canShare({ files: fl })) await navigator.share({ files: fl, title: "Convert Desk" });
+    else st("Sharing is not supported in this browser. Use Download instead.", true);
+  } catch (e) { if (e && e.name !== "AbortError") st("Could not open Share. Use Download instead.", true); }
+}
+function shareBtn(outs, st) { const b = document.createElement("button"); b.type = "button"; b.className = "btn ghost"; b.textContent = "Share"; b.onclick = () => shareFiles(outs, st); return b; }
+/* ---------- samples ---------- */
+const SAMPLE_ROWS = [["Region", "Product", "Units", "Revenue"], ["North", "Desk lamp", "120", "2400.50"], ["North", "Notebook", "540", "1620"], ["South", "Desk lamp", "95", "1900.25"], ["South", "Notebook", "410", "1230"], ["West", "Desk lamp", "150", "3000"]];
+async function makeSample() {
+  if (busy) return;
+  busy = true; refresh(); setStatus("Making a sample " + FORMATS[from].tag + " file");
+  try {
+    let f;
+    const doc = [{ type: "h", level: 1, text: "Quarterly sales" }, { type: "p", runs: [{ text: "Sample data for trying the converter. Figures are made up.", b: false, i: false }] }, { type: "table", header: true, rows: SAMPLE_ROWS }];
+    if (from === "xlsx") f = new File([await sheetsToXlsx([{ name: "Sales", rows: SAMPLE_ROWS }])], "sample-sales.xlsx");
+    else if (from === "docx") f = new File([await blocksToDocx(doc)], "sample-sales.docx");
+    else if (from === "pdf") f = new File([await blocksToPdf(doc)], "sample-sales.pdf");
+    else {
+      const c = document.createElement("canvas"); c.width = 900; c.height = 560; const g = c.getContext("2d");
+      g.fillStyle = "#fff"; g.fillRect(0, 0, 900, 560); g.fillStyle = "#111"; g.font = "bold 32px Arial"; g.fillText("Quarterly sales", 40, 64);
+      g.font = "18px Arial"; g.fillStyle = "#444"; g.fillText("Sample data. Figures are made up.", 40, 96);
+      SAMPLE_ROWS.forEach((r, i) => { r.forEach((v, j) => { const x = 40 + j * 205, y = 150 + i * 56; g.strokeStyle = "#999"; g.strokeRect(x, y - 30, 205, 56); g.fillStyle = "#111"; g.font = (i ? "20px" : "bold 20px") + " Arial"; g.fillText(v, x + 12, y + 4); }); });
+      f = new File([await blobFromCanvas(c, "image/jpeg", 0.92)], "sample-sales.jpg", { type: "image/jpeg" });
+    }
+    setStatus(""); resetResult(); files = [f];
+  } catch (e) { setStatus((e && e.message) || "The sample could not be made.", true); }
+  finally { busy = false; refresh(); }
+}
+
+/* ---------- wiring ---------- */
+$("swap").onclick = () => { if (busy) return; const a = from; from = to; to = a; files = []; resetResult(); setStatus(""); refresh(); };
+$("file").onchange = (e) => { addFiles(e.target.files); e.target.value = ""; };
+$("go").onclick = convert;
+$("sample-btn").onclick = makeSample;
+const drop = $("drop");
+["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => { if (!busy && e.dataTransfer) addFiles(e.dataTransfer.files); });
+refresh();
+(async () => { try { downloads = await claude.use("downloads"); } catch (e) { downloads = null; } })();
+
+/* ---------- image tools: compress + background remover ---------- */
+const TOOLS = {
+  compress: { tag: "Compress", sub: "Smaller file", go: "Compress images", note: "Makes photos smaller so they upload and send faster. Pick a quality, or type a target size in KB." },
+  hand: { tag: "Handwriting", sub: "Photo to Excel", go: "Read handwriting", note: "Reads a handwritten page or register (like attendance) into Excel or Word. Needs the free AI key below. Turn the photo upright first." },
+  cutout: { tag: "Remove BG", sub: "Cut-out PNG", go: "Remove background", note: "Plain background works best: a wall, sheet or sky behind one object. It runs on your phone and nothing is uploaded." }
+};
+let tool = "compress", tfiles = [], tbusy = false, tUrls = [];
+const isStandalone = typeof claude === "undefined";
+function tStatus(m, err) { const s = $("t-status"); s.hidden = !m; s.textContent = m || ""; s.classList.toggle("err", !!err); }
+function tProg(f, m) { $("t-bar").hidden = f == null; $("t-bar-i").style.width = Math.round((f || 0) * 100) + "%"; if (m) tStatus(m); }
+function tReset() { tUrls.forEach((u) => URL.revokeObjectURL(u)); tUrls = []; $("t-result").hidden = true; $("t-result").textContent = ""; }
+async function tSave(name, data) {
+  if (!downloads && await phoneSave(name, data)) return;
+  if (!downloads) { const u = URL.createObjectURL(data), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); tStatus("Saved " + name); return; }
+  try { await downloads.save({ filename: name, data }); tStatus("Saved " + name); }
+  catch (e) { if (e && e.code !== "declined") tStatus("The file could not be saved.", true); }
+}
+function tRefresh() {
+  const t = $("t-tiles"); t.textContent = "";
+  Object.keys(TOOLS).forEach((k) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "tile"; b.dataset.f = k; b.setAttribute("aria-pressed", String(k === tool));
+    b.innerHTML = "<b></b><span></span>"; b.firstChild.textContent = TOOLS[k].tag; b.lastChild.textContent = TOOLS[k].sub;
+    b.onclick = () => { if (tbusy) return; tool = k; tReset(); tStatus(""); tRefresh(); };
+    t.appendChild(b);
+  });
+  $("t-note").textContent = TOOLS[tool].note;
+  $("t-opt-compress").hidden = tool !== "compress"; $("t-opt-cutout").hidden = tool !== "cutout"; $("t-opt-hand").hidden = tool !== "hand"; if (tool === "hand") hPreview();
+  if ($("r-smart").hidden && isStandalone) { $("r-smart").hidden = false; $("r-mode").value = "smart"; }
+  $("r-str-wrap").hidden = $("r-mode").value === "smart";
+  const go = $("t-go"); go.textContent = TOOLS[tool].go; go.disabled = tbusy || !tfiles.length;
+  const ul = $("t-files"); ul.textContent = ""; ul.hidden = !tfiles.length;
+  tfiles.forEach((f, i) => {
+    const li = document.createElement("li");
+    const n = document.createElement("span"); n.className = "nm"; n.textContent = f.name;
+    const s = document.createElement("span"); s.className = "sz"; s.textContent = fmtSize(f.size);
+    const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.setAttribute("aria-label", "Remove " + f.name);
+    x.onclick = () => { if (tbusy) return; tfiles.splice(i, 1); tRefresh(); };
+    li.append(n, s, x); ul.appendChild(li);
+  });
+}
+function tAdd(list) {
+  for (const f of Array.from(list)) {
+    if (!/^image\//.test(f.type) && !/\.(jpe?g|png|webp)$/i.test(f.name)) { tStatus("“" + f.name + "” is not an image.", true); continue; }
+    tfiles.push(f);
+  }
+  tReset(); tRefresh();
+}
+async function openBitmap(file) {
+  if (window.createImageBitmap) { try { return await createImageBitmap(file, { imageOrientation: "from-image" }); } catch (e) { /* fall through */ } }
+  const u = URL.createObjectURL(file);
+  try { return await loadImage(u); } finally { URL.revokeObjectURL(u); }
+}
+function bmpSize(b) { return { w: b.naturalWidth || b.width, h: b.naturalHeight || b.height }; }
+function drawScaled(bmp, maxSide, bg) {
+  const { w, h } = bmpSize(bmp); const k = maxSide && Math.max(w, h) > maxSide ? maxSide / Math.max(w, h) : 1;
+  const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+  const g = c.getContext("2d"); if (bg) { g.fillStyle = bg; g.fillRect(0, 0, c.width, c.height); }
+  g.imageSmoothingQuality = "high"; g.drawImage(bmp, 0, 0, c.width, c.height); return c;
+}
+async function compressOne(file, opt) {
+  const bmp = await openBitmap(file);
+  let side = opt.side, mime = opt.fmt === "webp" ? "image/webp" : "image/jpeg";
+  let c = drawScaled(bmp, side, "#ffffff"), q = opt.q / 100;
+  let blob = await blobFromCanvas(c, mime, q);
+  if (blob && blob.type !== mime) { mime = "image/jpeg"; blob = await blobFromCanvas(c, mime, q); }
+  if (opt.kb) {
+    const target = opt.kb * 1024;
+    for (let round = 0; round < 6 && blob.size > target; round++) {
+      let lo = 0.2, hi = q, best = null;
+      for (let i = 0; i < 7; i++) { const m = (lo + hi) / 2; const b = await blobFromCanvas(c, mime, m); if (b.size <= target) { best = b; lo = m; } else hi = m; }
+      if (best) { blob = best; break; }
+      const s = Math.max(c.width, c.height) * 0.8; if (s < 200) break; c = drawScaled(bmp, s, "#ffffff"); blob = await blobFromCanvas(c, mime, 0.6); q = 0.6;
+    }
+  }
+  if (bmp.close) bmp.close();
+  return { blob, ext: mime === "image/webp" ? "webp" : "jpg" };
+}
+/* plain-background remover: flood fill from the edges using the edge colour */
+function removePlain(bmp, strength, bgMode) {
+  const c = drawScaled(bmp, 2400); const W = c.width, H = c.height; const g = c.getContext("2d", { willReadFrequently: true });
+  const img = g.getImageData(0, 0, W, H), d = img.data;
+  const med = (a) => { a.sort((x, y) => x - y); return a[a.length >> 1]; };
+  const R = [], G = [], B = [];
+  const take = (x, y) => { const i = (y * W + x) * 4; R.push(d[i]); G.push(d[i + 1]); B.push(d[i + 2]); };
+  const step = Math.max(1, Math.floor(Math.max(W, H) / 400));
+  for (let x = 0; x < W; x += step) { take(x, 0); take(x, H - 1); }
+  for (let y = 0; y < H; y += step) { take(0, y); take(W - 1, y); }
+  const br = med(R), bgc = med(G), bb = med(B), thr = strength * 1.6;
+  const dist = (i) => { const a = d[i] - br, b = d[i + 1] - bgc, e = d[i + 2] - bb; return Math.sqrt(a * a + b * b + e * e); };
+  const gone = new Uint8Array(W * H), stack = new Int32Array(W * H); let sp = 0;
+  const nd = (p, q) => { const a = d[p * 4] - d[q * 4], b = d[p * 4 + 1] - d[q * 4 + 1], e = d[p * 4 + 2] - d[q * 4 + 2]; return Math.sqrt(a * a + b * b + e * e); };
+  const push = (p, from) => { if (!gone[p] && dist(p * 4) <= thr && (from < 0 || nd(p, from) <= thr * 0.45)) { gone[p] = 1; stack[sp++] = p; } };
+  for (let x = 0; x < W; x++) { push(x, -1); push((H - 1) * W + x, -1); }
+  for (let y = 0; y < H; y++) { push(y * W, -1); push(y * W + W - 1, -1); }
+  while (sp) {
+    const p = stack[--sp], x = p % W, y = (p / W) | 0;
+    if (x > 0) push(p - 1, p); if (x < W - 1) push(p + 1, p); if (y > 0) push(p - W, p); if (y < H - 1) push(p + W, p);
+  }
+  let removed = 0;
+  for (let p = 0; p < W * H; p++) {
+    if (gone[p]) { d[p * 4 + 3] = 0; removed++; continue; }
+    const x = p % W, y = (p / W) | 0;
+    if ((x > 0 && gone[p - 1]) || (x < W - 1 && gone[p + 1]) || (y > 0 && gone[p - W]) || (y < H - 1 && gone[p + W])) {
+      const a = Math.max(0, Math.min(1, (dist(p * 4) - thr * 0.5) / (thr * 0.5))); d[p * 4 + 3] = Math.round(255 * a);
+    }
+  }
+  g.putImageData(img, 0, 0);
+  const frac = removed / (W * H);
+  if (bgMode === "white") { const o = document.createElement("canvas"); o.width = W; o.height = H; const og = o.getContext("2d"); og.fillStyle = "#fff"; og.fillRect(0, 0, W, H); og.drawImage(c, 0, 0); return { canvas: o, frac }; }
+  return { canvas: c, frac };
+}
+let ortP = null, ortSess = null;
+function loadOrt() {
+  if (ortP) return ortP;
+  const base = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.3/dist/";
+  ortP = new Promise((res, rej) => { const s = document.createElement("script"); s.src = base + "ort.min.js"; s.onload = () => { try { ort.env.wasm.wasmPaths = base; ort.env.wasm.numThreads = 1; ort.env.wasm.proxy = false; } catch (e) {} res(window.ort); }; s.onerror = () => { ortP = null; rej(new Error("ort")); }; document.head.appendChild(s); });
+  return ortP;
+}
+async function smartRemove(file, bgMode, prog) {
+  prog(0.1, "Loading the AI (first time only)");
+  const o = await loadOrt();
+  if (!ortSess) {
+    const r = await fetch("u2netp.onnx"); if (!r.ok) throw new Error("model");
+    ortSess = await o.InferenceSession.create(new Uint8Array(await r.arrayBuffer()), { executionProviders: ["wasm"] });
+  }
+  prog(0.5, "Finding the person or object");
+  const bmp = await openBitmap(file);
+  const S = 320, sc = document.createElement("canvas"); sc.width = S; sc.height = S;
+  const sg = sc.getContext("2d", { willReadFrequently: true }); sg.drawImage(bmp, 0, 0, S, S);
+  const px = sg.getImageData(0, 0, S, S).data, inp = new Float32Array(3 * S * S), mean = [0.485, 0.456, 0.406], sd = [0.229, 0.224, 0.225];
+  for (let i = 0; i < S * S; i++) for (let c = 0; c < 3; c++) inp[c * S * S + i] = (px[i * 4 + c] / 255 - mean[c]) / sd[c];
+  const out = await ortSess.run({ [ortSess.inputNames[0]]: new o.Tensor("float32", inp, [1, 3, S, S]) });
+  const m = out[ortSess.outputNames[0]].data; let lo = 1e9, hi = -1e9;
+  for (let i = 0; i < m.length; i++) { if (m[i] < lo) lo = m[i]; if (m[i] > hi) hi = m[i]; }
+  const mc = document.createElement("canvas"); mc.width = S; mc.height = S; const mg = mc.getContext("2d"), mi = mg.createImageData(S, S);
+  for (let i = 0; i < m.length; i++) { let v = (m[i] - lo) / (hi - lo + 1e-9); v = Math.max(0, Math.min(1, (v - 0.08) / 0.84)); v = v * v * (3 - 2 * v); mi.data[i * 4 + 3] = Math.round(v * 255); }
+  mg.putImageData(mi, 0, 0);
+  const c = drawScaled(bmp, 2400), g = c.getContext("2d");
+  g.imageSmoothingQuality = "high"; g.globalCompositeOperation = "destination-in"; g.drawImage(mc, 0, 0, c.width, c.height); g.globalCompositeOperation = "source-over";
+  if (bmp.close) bmp.close();
+  let res = c;
+  if (bgMode === "white") { res = document.createElement("canvas"); res.width = c.width; res.height = c.height; const rg = res.getContext("2d"); rg.fillStyle = "#fff"; rg.fillRect(0, 0, res.width, res.height); rg.drawImage(c, 0, 0); }
+  return await blobFromCanvas(res, "image/png");
+}
+async function runTool() {
+  if (tbusy || !tfiles.length) return;
+  if (tool === "hand") return runHand();
+  tbusy = true; tReset(); tRefresh(); tStatus(""); tProg(0.02, "Starting");
+  const outs = [];
+  try {
+    for (let i = 0; i < tfiles.length; i++) {
+      const f = tfiles[i], base = baseName(f.name), part = (v, m) => tProg((i + v) / tfiles.length, (tfiles.length > 1 ? "Image " + (i + 1) + " of " + tfiles.length + ". " : "") + m);
+      part(0.1, tool === "compress" ? "Compressing" : "Removing the background");
+      await tick();
+      if (tool === "compress") {
+        const kb = parseInt($("c-kb").value, 10);
+        const r = await compressOne(f, { q: +$("c-q").value, side: +$("c-side").value, fmt: $("c-fmt").value, kb: kb > 0 ? kb : 0 });
+        outs.push({ name: base + "-compressed." + r.ext, blob: r.blob, before: f.size });
+      } else {
+        let blob, warn = "";
+        if ($("r-mode").value === "smart" && isStandalone) {
+          try { blob = await smartRemove(f, $("r-bg").value, part); }
+          catch (e) { throw new Error("Smart AI could not start. Check that u2netp.onnx is uploaded next to index.html on GitHub and that internet is on the first time. Or choose Plain background for simple pictures."); }
+        }
+        if (!blob) {
+          const bmp = await openBitmap(f); const r = removePlain(bmp, +$("r-str").value, $("r-bg").value); if (bmp.close) bmp.close();
+          blob = await blobFromCanvas(r.canvas, "image/png");
+          if (r.frac < 0.02) warn = warn || "Almost nothing was removed. Raise Strength or use a picture with a plainer background.";
+          else if (r.frac > 0.97) warn = warn || "Almost everything was removed. Lower Strength.";
+        }
+        outs.push({ name: base + "-nobg.png", blob, before: f.size, warn, cut: true });
+      }
+      await tick();
+    }
+    tProg(1, "Done"); showToolResult(outs);
+    setTimeout(() => { tProg(null); tStatus(""); }, 400);
+  } catch (e) { tProg(null); tStatus((e && e.message) || "That did not work. Try another image.", true); }
+  finally { tbusy = false; tRefresh(); }
+}
+function showToolResult(outs) {
+  const box = $("t-result"); box.textContent = ""; box.hidden = false;
+  const head = document.createElement("div"); head.className = "res-head";
+  const t = document.createElement("span"); t.className = "res-tag"; t.style.setProperty("--c", tool === "compress" ? "var(--docx)" : "var(--xlsx)"); t.textContent = TOOLS[tool].tag;
+  const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = outs.length === 1 ? outs[0].name : outs.length + " images ready";
+  const after = outs.reduce((a, o) => a + o.blob.size, 0), before = outs.reduce((a, o) => a + o.before, 0);
+  const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = tool === "compress" ? fmtSize(before) + " → " + fmtSize(after) : fmtSize(after);
+  head.append(t, nm, meta); box.appendChild(head);
+  outs.forEach((o) => { if (o.note) { const p = document.createElement("p"); p.className = "note"; p.textContent = o.note; box.appendChild(p); } if (o.warn) { const p = document.createElement("p"); p.className = "note"; p.textContent = o.warn; box.appendChild(p); } });
+  const grid = document.createElement("div"); grid.className = "thumbs";
+  outs.forEach((o) => {
+    if (!/^image\//.test(o.blob.type)) return;
+    const u = URL.createObjectURL(o.blob); tUrls.push(u);
+    const fig = document.createElement("figure"); const im = document.createElement("img"); im.src = u; im.alt = o.name; if (o.cut) im.className = "checker";
+    const cap = document.createElement("figcaption"); const s = document.createElement("span"); s.textContent = fmtSize(o.blob.size);
+    if (tool === "compress" && o.before) { const pc = Math.round((1 - o.blob.size / o.before) * 100); if (pc > 0) { const gn = document.createElement("span"); gn.className = "gain"; gn.textContent = "−" + pc + "%"; s.append(" ", gn); } }
+    const b = document.createElement("button"); b.type = "button"; b.className = "link"; b.textContent = "Save"; b.onclick = () => tSave(o.name, o.blob);
+    cap.append(s, b); fig.append(im, cap); grid.appendChild(fig);
+  });
+  box.appendChild(grid);
+  const row = document.createElement("div"); row.className = "row";
+  const dl = document.createElement("button"); dl.type = "button"; dl.className = "btn";
+  if (outs.length === 1) { dl.textContent = "Save to phone"; dl.onclick = () => saveToPhone(outs[0].name, outs[0].blob, tStatus); }
+  else { dl.textContent = "Save all to phone (ZIP)"; dl.onclick = async () => { await lib("jszip"); const z = new JSZip(); outs.forEach((o) => z.file(o.name, o.blob)); saveToPhone("images-" + (tool === "compress" ? "compressed" : "nobg") + ".zip", await z.generateAsync({ type: "blob" })); }; }
+  const again = document.createElement("button"); again.type = "button"; again.className = "btn ghost"; again.textContent = "Do more images";
+  again.onclick = () => { tfiles = []; tReset(); tStatus(""); tRefresh(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const gal = document.createElement("button"); gal.type = "button"; gal.className = "btn ghost"; gal.textContent = "Save to gallery";
+  gal.onclick = async () => { try { const fl = outs.map((o) => new File([o.blob], o.name, { type: o.blob.type })); if (navigator.canShare && navigator.canShare({ files: fl })) { await navigator.share({ files: fl, title: "Save image" }); tStatus("In the menu choose Photos, Gallery or Save image."); } else { await tSave(outs[0].name, outs[0].blob); tStatus("Saved. Look in your Downloads or Gallery."); } } catch (e) { if (e && e.name !== "AbortError") tStatus("Could not open the save menu. Press and hold the picture, then choose Download image.", true); } };
+  if (/^image\//.test(outs[0].blob.type)) row.append(dl, gal, again); else row.append(dl, shareBtn(outs, tStatus), again); box.appendChild(row); box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+async function tSample() {
+  const c = document.createElement("canvas"); c.width = 1600; c.height = 1100; const g = c.getContext("2d");
+  const gr = g.createLinearGradient(0, 0, 0, 1100); gr.addColorStop(0, "#dfe9f3"); gr.addColorStop(1, "#eef2f6"); g.fillStyle = gr; g.fillRect(0, 0, 1600, 1100);
+  for (let i = 0; i < 9000; i++) { g.fillStyle = "rgba(" + (120 + Math.random() * 120 | 0) + "," + (120 + Math.random() * 120 | 0) + ",255,.05)"; g.fillRect(Math.random() * 1600, Math.random() * 1100, 3, 3); }
+  g.fillStyle = "#e4572e"; g.beginPath(); g.arc(800, 560, 330, 0, 7); g.fill();
+  g.fillStyle = "#1f5eff"; g.fillRect(640, 400, 320, 320); g.fillStyle = "#ffd23f"; g.beginPath(); g.arc(800, 560, 90, 0, 7); g.fill();
+  tfiles = [new File([await blobFromCanvas(c, "image/jpeg", 0.97)], "sample-photo.jpg", { type: "image/jpeg" })]; tReset(); tRefresh();
+}
+function setMode(m) {
+  const t = m === "tools"; document.body.classList.toggle("tools", t); document.querySelector("h1").textContent = t ? "What do you want to do with your photos?" : "What do you want to convert?"; document.querySelector(".band p").textContent = t ? "Make a photo smaller, or cut out the background." : "Pick the file you have, then the file you need."; $("view-convert").hidden = t; $("view-tools").hidden = !t;
+  $("m-convert").setAttribute("aria-pressed", String(!t)); $("m-tools").setAttribute("aria-pressed", String(t)); window.scrollTo({ top: 0 });
+}
+try { $("aikey").value = localStorage.getItem("cd-aikey") || ""; } catch (e) {}
+$("aikey").oninput = () => { try { localStorage.setItem("cd-aikey", $("aikey").value.trim()); } catch (e) {} };
+$("m-convert").onclick = () => setMode("convert"); $("m-tools").onclick = () => setMode("tools");
+$("t-file").onchange = (e) => { tAdd(e.target.files); e.target.value = ""; };
+$("t-go").onclick = runTool; $("t-sample").onclick = tSample;
+$("c-q").oninput = () => { $("c-q-out").textContent = $("c-q").value + "%"; };
+$("r-str").oninput = () => { $("r-str-out").textContent = $("r-str").value; };
+$("r-mode").onchange = tRefresh;
+const tdrop = $("t-drop");
+["dragenter", "dragover"].forEach((ev) => tdrop.addEventListener(ev, (e) => { e.preventDefault(); tdrop.classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) => tdrop.addEventListener(ev, (e) => { e.preventDefault(); tdrop.classList.remove("over"); }));
+tdrop.addEventListener("drop", (e) => { if (!tbusy && e.dataTransfer) tAdd(e.dataTransfer.files); });
+tRefresh();
+/* ---------- photo quality check ---------- */
+async function photoQuality(file) {
+  try {
+    const im = await imageToCanvasJpeg(file); const s = 700 / Math.max(im.canvas.width, im.canvas.height), k = Math.min(1, s);
+    const W = Math.max(8, Math.round(im.canvas.width * k)), H = Math.max(8, Math.round(im.canvas.height * k));
+    const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(im.canvas, 0, 0, W, H);
+    const d = g.getImageData(0, 0, W, H).data, gr = new Float32Array(W * H); let sum = 0, mn = 255, mx = 0;
+    for (let i = 0; i < W * H; i++) { const v = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]; gr[i] = v; sum += v; }
+    const mean = sum / (W * H); let sq = 0; for (let i = 0; i < W * H; i++) sq += (gr[i] - mean) * (gr[i] - mean); const sd = Math.sqrt(sq / (W * H));
+    let lv = 0, ln = 0, ls = 0;
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) { const i = y * W + x, l = 4 * gr[i] - gr[i - 1] - gr[i + 1] - gr[i - W] - gr[i + W]; ls += l; lv += l * l; ln++; }
+    const lap = lv / ln - (ls / ln) * (ls / ln);
+    const out = [];
+    if (mean < 85) out.push("The photo is dark. Take it again in good light, near a window or with a lamp, without your shadow on the page.");
+    else if (mean > 225 && sd < 25) out.push("The photo is washed out or too bright. Move the light so there is no glare, then take it again.");
+    if (sd < 32 && mean >= 85) out.push("The photo has low contrast, so the writing may be faint. A closer, brighter photo will read better.");
+    if (lap < 60) out.push("The photo looks blurry. Hold the phone steady, tap the screen to focus, and take it again.");
+    if (Math.min(im.canvas.width, im.canvas.height) < 700) out.push("The photo is small. Stand closer or use the camera at full size.");
+    return out;
+  } catch (e) { return []; }
+}
+
+/* ---------- handwriting tool ---------- */
+async function rotateFile(file, deg) {
+  const im = await imageToCanvasJpeg(file); const s = im.canvas; if (!+deg) return new File([await blobFromCanvas(s, "image/jpeg", 0.92)], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+  const c = document.createElement("canvas"); const sw = +deg === 180;
+  c.width = sw ? s.width : s.height; c.height = sw ? s.height : s.width; const g = c.getContext("2d");
+  g.translate(c.width / 2, c.height / 2); g.rotate(deg * Math.PI / 180); g.drawImage(s, -s.width / 2, -s.height / 2);
+  return new File([await blobFromCanvas(c, "image/jpeg", 0.92)], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+}
+let hPrevUrl = null, hPrevSeq = 0;
+async function hPreview() {
+  const img = $("h-prev"); const seq = ++hPrevSeq;
+  if (!tfiles.length) { img.hidden = true; return; }
+  try { const r = await rotateFile(tfiles[0], $("h-rot").value); if (seq !== hPrevSeq) return; if (hPrevUrl) URL.revokeObjectURL(hPrevUrl); hPrevUrl = URL.createObjectURL(r); img.src = hPrevUrl; img.hidden = false; } catch (e) { img.hidden = true; }
+}
+async function runHand() {
+  const key = ($("h-key").value || "").trim();
+  if (!key) { tStatus("Paste the AI reader key first. Steps: open aistudio.google.com/app/apikey, sign in, tap Create API key, copy it and paste it here.", true); return; }
+  tbusy = true; tReset(); tRefresh(); tStatus(""); tProg(0.02, "Starting"); window.__tp = true;
+  try {
+    const kind = $("h-out").value, outs = []; let sheets = [], blocks = []; const qn = [];
+    for (let i = 0; i < tfiles.length; i++) {
+      tProg(0.05 + 0.8 * i / tfiles.length, tfiles.length > 1 ? "Reading page " + (i + 1) + " of " + tfiles.length : "Reading the handwriting"); await tick();
+      const rf = await rotateFile(tfiles[i], $("h-rot").value); (await photoQuality(rf)).forEach((w) => { if (!qn.includes(w)) qn.push(w); });
+      if (kind === "xlsx") { const t = ocrToSheets(await ocrGemini(rf, "register", key)); t.forEach((s) => sheets.push(tfiles.length > 1 ? { name: "Page" + (i + 1) + " " + s.name, rows: s.rows } : s)); }
+      else { if (i) blocks.push({ type: "pb" }); blocks.push(...ocrToBlocks(await ocrGemini(rf, "doc", key))); }
+    }
+    tProg(0.95, kind === "xlsx" ? "Building the Excel file" : "Building the Word file");
+    const base = baseName(tfiles[0].name) + "-handwriting";
+    if (kind === "xlsx") outs.push({ name: base + ".xlsx", blob: await sheetsToXlsx(sheets, []), before: 0, note: "Check the times against the page. Unclear values have a question mark." + (qn.length ? " Photo tips: " + qn.join(" ") : "") });
+    else outs.push({ name: base + ".docx", blob: await blocksToDocx(blocks), before: 0, note: qn.length ? "Photo tips: " + qn.join(" ") : "" });
+    tProg(1, "Done"); showToolResult(outs); setTimeout(() => { tProg(null); tStatus(""); }, 400);
+  } catch (e) { tProg(null); tStatus((e && e.message) || "That did not work. Try again.", true); }
+  finally { window.__tp = false; tbusy = false; tRefresh(); }
+}
+try { const k = localStorage.getItem("cd-aikey") || ""; $("h-key").value = k; } catch (e) {}
+$("h-key").oninput = () => { try { localStorage.setItem("cd-aikey", $("h-key").value.trim()); $("aikey").value = $("h-key").value.trim(); } catch (e) {} };
+$("aikey").addEventListener("input", () => { $("h-key").value = $("aikey").value; });
+$("h-rot").onchange = hPreview;
+
+/* ---------- install prompt ---------- */
+let installEv = null;
+const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+function showBar() { try { if (standalone() || sessionStorage.getItem("cd-bar-x")) return; } catch (e) { if (standalone()) return; } $("getapp").hidden = false; }
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEv = e; showBar(); });
+window.addEventListener("appinstalled", () => { $("getapp").hidden = true; });
+showBar();
+$("getapp-x").onclick = () => { $("getapp").hidden = true; try { sessionStorage.setItem("cd-bar-x", "1"); } catch (e) {} };
+$("getapp-go").onclick = async () => {
+  if (installEv) { installEv.prompt(); try { await installEv.userChoice; } catch (e) {} installEv = null; return; }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  $("sheet-body").innerHTML = ios
+    ? "<ol><li>Open this page in <b>Safari</b>.</li><li>Tap the <b>Share</b> button (square with an arrow).</li><li>Tap <b>Add to Home Screen</b>, then <b>Add</b>.</li></ol>"
+    : "<ol><li>Open this page in <b>Chrome</b>.</li><li>Tap the <b>⋮</b> menu at the top right.</li><li>Tap <b>Install app</b> (or <b>Add to Home screen</b>), then <b>Install</b>.</li></ol><p>If you do not see it, update Chrome and reload this page.</p>";
+  $("sheet").hidden = false;
+};
+$("sheet-ok").onclick = () => { $("sheet").hidden = true; };
+</script>
+<script>
+/* Turns Tesseract output into the same JSON shape the Claude reader returns. */
+function ocrShape(data, lang, mode) {
+  const rtl = /urd/.test(lang);
+  let lines = (data.lines || []).map((l) => ({
+    text: String(l.text || "").replace(/\s+/g, " ").trim(),
+    x0: l.bbox.x0, y0: l.bbox.y0, y1: l.bbox.y1,
+    words: (l.words || []).filter((w) => String(w.text || "").trim()),
+  })).filter((l) => l.text);
+  if (!lines.length) {
+    lines = String(data.text || "").split("\n").map((s) => s.trim()).filter(Boolean).map((s, i) => ({ text: s, x0: 0, y0: i * 24, y1: i * 24 + 18, words: [] }));
+  }
+  if (!lines.length) return mode === "table" ? { tables: [] } : { blocks: [] };
+  const heights = lines.map((l) => l.y1 - l.y0).sort((a, b) => a - b);
+  const med = Math.max(8, heights[Math.floor(heights.length / 2)] || 16);
+  const cellsOf = (l) => {
+    if (rtl || !l.words.length) return [{ s: l.text, x: l.x0 }];
+    const h = Math.max(8, l.y1 - l.y0), cells = []; let cur = null;
+    l.words.forEach((w) => {
+      const t = String(w.text).trim();
+      if (cur && w.bbox.x0 - cur.end <= h * 1.1) { cur.s += " " + t; cur.end = w.bbox.x1; }
+      else { cur = { s: t, x: w.bbox.x0, end: w.bbox.x1 }; cells.push(cur); }
+    });
+    return cells;
+  };
+  const gridFrom = (cellRows) => {
+    const tol = med * 1.3, xs = [];
+    cellRows.forEach((cs) => cs.forEach((c) => xs.push(c.x)));
+    xs.sort((a, b) => a - b);
+    const groups = [];
+    xs.forEach((x) => { const g = groups[groups.length - 1]; if (g && x - g.last <= tol) { g.sum += x; g.n++; g.last = x; } else groups.push({ sum: x, n: 1, last: x }); });
+    const cols = groups.map((g) => g.sum / g.n);
+    const colOf = (x) => { let b = 0, d = 1e9; cols.forEach((c, i) => { const dd = Math.abs(c - x); if (dd < d) { d = dd; b = i; } }); return b; };
+    const rows = cellRows.map((cs) => { const r = new Array(cols.length).fill(""); cs.forEach((c) => { const i = colOf(c.x); r[i] = r[i] ? r[i] + " " + c.s : c.s; }); return r; });
+    let w = 0; rows.forEach((r) => r.forEach((v, i) => { if (v !== "") w = Math.max(w, i + 1); }));
+    return rows.map((r) => r.slice(0, w));
+  };
+  if (mode === "table") {
+    const cr = lines.map(cellsOf);
+    const multi = cr.filter((c) => c.length >= 2).length;
+    return { tables: [{ name: multi >= 2 ? "Table" : "Text", rows: multi >= 2 ? gridFrom(cr) : lines.map((l) => [l.text]) }] };
+  }
+  const blocks = []; let para = null, prev = null, tbl = null;
+  const flushPara = () => { if (para) { const t = para.text.replace(/\s+/g, " ").trim(); if (t) blocks.push(para.level ? { type: "h", level: para.level, text: t } : { type: "p", text: t }); para = null; } };
+  const flushTbl = () => { if (tbl) { const rows = gridFrom(tbl); if (rows.length) blocks.push({ type: "table", rows }); tbl = null; } };
+  lines.forEach((l) => {
+    const cs = cellsOf(l);
+    if (cs.length >= 2) { flushPara(); (tbl = tbl || []).push(cs); prev = l; return; }
+    flushTbl();
+    const h = l.y1 - l.y0, level = h >= med * 1.6 ? 1 : h >= med * 1.3 ? 2 : 0;
+    const gap = prev ? l.y0 - prev.y1 : 0;
+    if (!para || level || para.level || gap > med * 0.9) { flushPara(); para = { text: l.text, level }; } else para.text += " " + l.text;
+    prev = l;
+  });
+  flushPara(); flushTbl();
+  return { blocks };
+}
+
+/* Reads text on the phone with Tesseract when Claude is not available. */
+let tessLoading = null;
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve();
+  if (!tessLoading) tessLoading = loadScript("https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js").catch((e) => { tessLoading = null; throw e; });
+  return tessLoading;
+}
+/* image clean-up before reading text */
+function enhanceForOcr(src) {
+  const long = Math.max(src.width, src.height);
+  const k = Math.max(0.5, Math.min(3, 2400 / long));
+  const W = Math.round(src.width * k), H = Math.round(src.height * k);
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d", { willReadFrequently: true });
+  g.imageSmoothingQuality = "high"; g.fillStyle = "#fff"; g.fillRect(0, 0, W, H); g.drawImage(src, 0, 0, W, H);
+  const img = g.getImageData(0, 0, W, H), d = img.data, n = W * H, gray = new Float32Array(n);
+  for (let i = 0; i < n; i++) gray[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+  /* even out shadows: subtract a heavy blur (background estimate) */
+  const bg = boxBlur(gray, W, H, Math.max(15, Math.round(Math.min(W, H) / 30)));
+  const flat = new Float32Array(n); for (let i = 0; i < n; i++) flat[i] = Math.max(0, Math.min(255, gray[i] / Math.max(40, bg[i]) * 235));
+  /* stretch contrast using 1% and 99% */
+  const hist = new Uint32Array(256); for (let i = 0; i < n; i++) hist[Math.round(flat[i])]++;
+  let acc = 0, lo = 0, hi = 255; for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc >= n * 0.01) { lo = v; break; } }
+  acc = 0; for (let v = 255; v >= 0; v--) { acc += hist[v]; if (acc >= n * 0.01) { hi = v; break; } }
+  if (hi - lo < 30) { lo = 0; hi = 255; }
+  const sm = boxBlur(flat, W, H, 1);
+  const out = new Uint8ClampedArray(n * 4);
+  for (let i = 0; i < n; i++) { const v = Math.max(0, Math.min(255, (sm[i] - lo) * 255 / (hi - lo))); out[i * 4] = out[i * 4 + 1] = out[i * 4 + 2] = v; out[i * 4 + 3] = 255; }
+  const grayC = document.createElement("canvas"); grayC.width = W; grayC.height = H; grayC.getContext("2d").putImageData(new ImageData(out, W, H), 0, 0);
+  return { gray: grayC };
+}
+function boxBlur(a, W, H, r) {
+  const I = new Float64Array((W + 1) * (H + 1));
+  for (let y = 0; y < H; y++) { let row = 0; for (let x = 0; x < W; x++) { row += a[y * W + x]; I[(y + 1) * (W + 1) + x + 1] = I[y * (W + 1) + x + 1] + row; } }
+  const o = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) { const y0 = Math.max(0, y - r), y1 = Math.min(H, y + r + 1);
+    for (let x = 0; x < W; x++) { const x0 = Math.max(0, x - r), x1 = Math.min(W, x + r + 1);
+      o[y * W + x] = (I[y1 * (W + 1) + x1] - I[y0 * (W + 1) + x1] - I[y1 * (W + 1) + x0] + I[y0 * (W + 1) + x0]) / ((x1 - x0) * (y1 - y0)); } }
+  return o;
+}
+
+async function ocrLocal(file, mode) {
+  setProgress(0.05, "Loading the text reader");
+  await loadTesseract();
+  const lang = ($("lang") && $("lang").value) || "eng";
+  const im = await imageToCanvasJpeg(file);
+  setProgress(0.1, "Cleaning the picture"); await tick();
+  const c = enhanceForOcr(im.canvas).gray;
+  const worker = await Tesseract.createWorker(lang, 1, {
+    logger: (m) => {
+      if (m.status === "recognizing text") setProgress(0.2 + 0.7 * m.progress, "Reading text " + Math.round(m.progress * 100) + "%");
+      else if (m.status) setProgress(0.1, "Preparing: " + m.status);
+    },
+  });
+  let data;
+  try { ({ data } = await worker.recognize(c)); }
+  catch (e) { throw new Error("The text in the picture could not be read. Try a clearer picture, or turn off the text option."); }
+  finally { try { await worker.terminate(); } catch (e) {} }
+  return ocrShape(data, lang, mode);
+}
+</script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>
