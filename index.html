@@ -1008,7 +1008,7 @@ function blobToB64(b) { return new Promise((res, rej) => { const fr = new FileRe
 async function ocrGemini(file, mode, key) {
   const setProgress = (n, m) => (window.__tp ? tProg : window.setProgressFn)(n, m);
   key = String(key || "").replace(/[\s"'`]/g, "");
-  if (!/^AIza[0-9A-Za-z_-]{35}$/.test(key)) throw new Error("This does not look like a Google AI key. A real key starts with AIza and has 39 characters. What you pasted has " + key.length + " characters and starts with \"" + key.slice(0, 4) + "\". Open the key in AI Studio and copy the whole key again.");
+  if (key.length < 20 || key.length > 120 || !/^[0-9A-Za-z_.~-]+$/.test(key)) throw new Error("This does not look like a Google AI key. What you pasted has " + key.length + " characters and starts with \"" + key.slice(0, 4) + "\". Open the key in AI Studio and copy the whole key again.");
   setProgress(0.15, "Preparing the picture");
   const im = await imageToCanvasJpeg(file); let c = im.canvas; const MAX = 2000;
   if (Math.max(c.width, c.height) > MAX) { const s = MAX / Math.max(c.width, c.height), n = document.createElement("canvas"); n.width = Math.round(c.width * s); n.height = Math.round(c.height * s); n.getContext("2d").drawImage(c, 0, 0, n.width, n.height); c = n; }
@@ -1196,7 +1196,7 @@ async function convert() {
         for (let i = 0; i < files.length; i++) {
           setProgress(0.1 + 0.8 * i / files.length, files.length > 1 ? "Reading image " + (i + 1) + " of " + files.length : "Reading the picture");
           if (i) bl.push({ type: "pb" });
-          if (useOcr) bl.push(...ocrToBlocks(await ocrImage(files[i], "doc")));
+          if (useOcr) { (await photoQuality(files[i])).forEach((w) => { if (!WARN.includes(w)) WARN.push(w); }); bl.push(...ocrToBlocks(await ocrImage(files[i], "doc"))); }
           else { const im = await imageToCanvasJpeg(files[i]); bl.push({ type: "img", src: im.dataUrl, w: im.w * 0.75, h: im.h * 0.75 }); }
         }
       }
@@ -1217,7 +1217,7 @@ async function convert() {
         for (let i = 0; i < files.length; i++) {
           setProgress(0.1 + 0.8 * i / files.length, files.length > 1 ? "Reading image " + (i + 1) + " of " + files.length : "Reading the picture");
           const im = await imageToCanvasJpeg(files[i]);
-          if (useOcr) { const t = ocrToSheets(await ocrImage(files[i], "table")); t.forEach((s) => sh.push(files.length > 1 ? { name: "Img" + (i + 1) + " " + s.name, rows: s.rows } : s)); imgs.push(im); }
+          if (useOcr) { (await photoQuality(files[i])).forEach((w) => { if (!WARN.includes(w)) WARN.push(w); }); const t = ocrToSheets(await ocrImage(files[i], "table")); t.forEach((s) => sh.push(files.length > 1 ? { name: "Img" + (i + 1) + " " + s.name, rows: s.rows } : s)); imgs.push(im); }
           else imgs.push(im);
         }
       }
@@ -1240,6 +1240,11 @@ async function convert() {
 }
 
 /* ---------- result ---------- */
+async function saveToPhone(name, data, st) {
+  if (downloads) { try { await downloads.save({ filename: name, data }); st("Saved " + name); } catch (e) { if (e && e.code !== "declined") st("The file could not be saved.", true); } return; }
+  const u = URL.createObjectURL(data), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 8000);
+  st("Saved to your phone: " + name + ". Open your Downloads folder or the Files app to find it.");
+}
 async function phoneSave(name, data) {
   try {
     if (navigator.canShare && matchMedia("(pointer: coarse)").matches) {
@@ -1277,10 +1282,10 @@ function showResult(outs, base) {
   }
   const row = document.createElement("div"); row.className = "row";
   const dl = document.createElement("button"); dl.type = "button"; dl.className = "btn";
-  if (outs.length === 1) { dl.textContent = "Download " + outs[0].name; dl.onclick = () => save(outs[0].name, outs[0].blob); }
+  if (outs.length === 1) { dl.textContent = "Save to phone"; dl.onclick = () => saveToPhone(outs[0].name, outs[0].blob, setStatus); }
   else {
-    dl.textContent = "Download all as ZIP";
-    dl.onclick = async () => { await lib("jszip"); const z = new JSZip(); outs.forEach((o) => z.file(o.name, o.blob)); save(base + "-pages.zip", await z.generateAsync({ type: "blob" })); };
+    dl.textContent = "Save all to phone (ZIP)";
+    dl.onclick = async () => { await lib("jszip"); const z = new JSZip(); outs.forEach((o) => z.file(o.name, o.blob)); saveToPhone(base + "-pages.zip", await z.generateAsync({ type: "blob" }), setStatus); };
   }
   const again = document.createElement("button"); again.type = "button"; again.className = "btn ghost"; again.textContent = "Convert another";
   again.onclick = () => { files = []; resetResult(); setStatus(""); refresh(); window.scrollTo({ top: 0, behavior: "smooth" }); };
@@ -1533,8 +1538,8 @@ function showToolResult(outs) {
   box.appendChild(grid);
   const row = document.createElement("div"); row.className = "row";
   const dl = document.createElement("button"); dl.type = "button"; dl.className = "btn";
-  if (outs.length === 1) { dl.textContent = "Download " + outs[0].name; dl.onclick = () => tSave(outs[0].name, outs[0].blob); }
-  else { dl.textContent = "Download all as ZIP"; dl.onclick = async () => { await lib("jszip"); const z = new JSZip(); outs.forEach((o) => z.file(o.name, o.blob)); tSave("images-" + (tool === "compress" ? "compressed" : "nobg") + ".zip", await z.generateAsync({ type: "blob" })); }; }
+  if (outs.length === 1) { dl.textContent = "Save to phone"; dl.onclick = () => saveToPhone(outs[0].name, outs[0].blob, tStatus); }
+  else { dl.textContent = "Save all to phone (ZIP)"; dl.onclick = async () => { await lib("jszip"); const z = new JSZip(); outs.forEach((o) => z.file(o.name, o.blob)); saveToPhone("images-" + (tool === "compress" ? "compressed" : "nobg") + ".zip", await z.generateAsync({ type: "blob" })); }; }
   const again = document.createElement("button"); again.type = "button"; again.className = "btn ghost"; again.textContent = "Do more images";
   again.onclick = () => { tfiles = []; tReset(); tStatus(""); tRefresh(); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const gal = document.createElement("button"); gal.type = "button"; gal.className = "btn ghost"; gal.textContent = "Save to gallery";
@@ -1566,6 +1571,28 @@ const tdrop = $("t-drop");
 ["dragleave", "drop"].forEach((ev) => tdrop.addEventListener(ev, (e) => { e.preventDefault(); tdrop.classList.remove("over"); }));
 tdrop.addEventListener("drop", (e) => { if (!tbusy && e.dataTransfer) tAdd(e.dataTransfer.files); });
 tRefresh();
+/* ---------- photo quality check ---------- */
+async function photoQuality(file) {
+  try {
+    const im = await imageToCanvasJpeg(file); const s = 700 / Math.max(im.canvas.width, im.canvas.height), k = Math.min(1, s);
+    const W = Math.max(8, Math.round(im.canvas.width * k)), H = Math.max(8, Math.round(im.canvas.height * k));
+    const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(im.canvas, 0, 0, W, H);
+    const d = g.getImageData(0, 0, W, H).data, gr = new Float32Array(W * H); let sum = 0, mn = 255, mx = 0;
+    for (let i = 0; i < W * H; i++) { const v = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]; gr[i] = v; sum += v; }
+    const mean = sum / (W * H); let sq = 0; for (let i = 0; i < W * H; i++) sq += (gr[i] - mean) * (gr[i] - mean); const sd = Math.sqrt(sq / (W * H));
+    let lv = 0, ln = 0, ls = 0;
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) { const i = y * W + x, l = 4 * gr[i] - gr[i - 1] - gr[i + 1] - gr[i - W] - gr[i + W]; ls += l; lv += l * l; ln++; }
+    const lap = lv / ln - (ls / ln) * (ls / ln);
+    const out = [];
+    if (mean < 85) out.push("The photo is dark. Take it again in good light, near a window or with a lamp, without your shadow on the page.");
+    else if (mean > 225 && sd < 25) out.push("The photo is washed out or too bright. Move the light so there is no glare, then take it again.");
+    if (sd < 32 && mean >= 85) out.push("The photo has low contrast, so the writing may be faint. A closer, brighter photo will read better.");
+    if (lap < 60) out.push("The photo looks blurry. Hold the phone steady, tap the screen to focus, and take it again.");
+    if (Math.min(im.canvas.width, im.canvas.height) < 700) out.push("The photo is small. Stand closer or use the camera at full size.");
+    return out;
+  } catch (e) { return []; }
+}
+
 /* ---------- handwriting tool ---------- */
 async function rotateFile(file, deg) {
   const im = await imageToCanvasJpeg(file); const s = im.canvas; if (!+deg) return new File([await blobFromCanvas(s, "image/jpeg", 0.92)], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
@@ -1585,17 +1612,17 @@ async function runHand() {
   if (!key) { tStatus("Paste the AI reader key first. Steps: open aistudio.google.com/app/apikey, sign in, tap Create API key, copy it and paste it here.", true); return; }
   tbusy = true; tReset(); tRefresh(); tStatus(""); tProg(0.02, "Starting"); window.__tp = true;
   try {
-    const kind = $("h-out").value, outs = []; let sheets = [], blocks = [];
+    const kind = $("h-out").value, outs = []; let sheets = [], blocks = []; const qn = [];
     for (let i = 0; i < tfiles.length; i++) {
       tProg(0.05 + 0.8 * i / tfiles.length, tfiles.length > 1 ? "Reading page " + (i + 1) + " of " + tfiles.length : "Reading the handwriting"); await tick();
-      const rf = await rotateFile(tfiles[i], $("h-rot").value);
+      const rf = await rotateFile(tfiles[i], $("h-rot").value); (await photoQuality(rf)).forEach((w) => { if (!qn.includes(w)) qn.push(w); });
       if (kind === "xlsx") { const t = ocrToSheets(await ocrGemini(rf, "register", key)); t.forEach((s) => sheets.push(tfiles.length > 1 ? { name: "Page" + (i + 1) + " " + s.name, rows: s.rows } : s)); }
       else { if (i) blocks.push({ type: "pb" }); blocks.push(...ocrToBlocks(await ocrGemini(rf, "doc", key))); }
     }
     tProg(0.95, kind === "xlsx" ? "Building the Excel file" : "Building the Word file");
     const base = baseName(tfiles[0].name) + "-handwriting";
-    if (kind === "xlsx") outs.push({ name: base + ".xlsx", blob: await sheetsToXlsx(sheets, []), before: 0, note: "Check the times against the page. Unclear values have a question mark." });
-    else outs.push({ name: base + ".docx", blob: await blocksToDocx(blocks), before: 0 });
+    if (kind === "xlsx") outs.push({ name: base + ".xlsx", blob: await sheetsToXlsx(sheets, []), before: 0, note: "Check the times against the page. Unclear values have a question mark." + (qn.length ? " Photo tips: " + qn.join(" ") : "") });
+    else outs.push({ name: base + ".docx", blob: await blocksToDocx(blocks), before: 0, note: qn.length ? "Photo tips: " + qn.join(" ") : "" });
     tProg(1, "Done"); showToolResult(outs); setTimeout(() => { tProg(null); tStatus(""); }, 400);
   } catch (e) { tProg(null); tStatus((e && e.message) || "That did not work. Try again.", true); }
   finally { window.__tp = false; tbusy = false; tRefresh(); }
