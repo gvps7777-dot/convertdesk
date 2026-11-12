@@ -450,6 +450,11 @@ body.tools .route { display: none; } body.tools .band.gut { padding-bottom: 56px
             <span class="hint">Free key: console.groq.com/keys. Off = only Google reads your photo.</span>
           </div>
           <div class="opt">
+            <label class="t" for="h-time">Time format</label>
+            <select id="h-time"><option value="24">As written (7:55, 12:30)</option><option value="12">12-hour (7:55 AM, 12:30 PM)</option></select>
+            <span class="hint">12-hour: 7 to 11 become AM, 12 and 1 to 6 become PM. Only used for Excel.</span>
+          </div>
+          <div class="opt">
             <label class="t" for="h-rot">Photo direction</label>
             <select id="h-rot"><option value="0">As it is</option><option value="90">Turn right</option><option value="270">Turn left</option><option value="180">Upside down</option></select>
             <img id="h-prev" alt="Preview" style="max-width:100%;max-height:240px;border-radius:10px;border:1px solid var(--line);align-self:flex-start" hidden>
@@ -1656,6 +1661,11 @@ async function hPreview() {
   if (!tfiles.length) { img.hidden = true; return; }
   try { const r = await rotateFile(tfiles[0], $("h-rot").value); if (seq !== hPrevSeq) return; if (hPrevUrl) URL.revokeObjectURL(hPrevUrl); hPrevUrl = URL.createObjectURL(r); img.src = hPrevUrl; img.hidden = false; } catch (e) { img.hidden = true; }
 }
+function to12h(v) {
+  const m = /^(\d{1,2})\s*[:.]\s*(\d{2})(\??)$/.exec(String(v).trim());
+  if (!m) return v; const h = +m[1], mm = m[2]; if (h < 1 || h > 12 || +mm > 59) return v;
+  return h + ":" + mm + (h >= 7 && h <= 11 ? " AM" : " PM") + m[3];
+}
 async function runHand() {
   if (!getAiKey() && !getGroqKey()) { tStatus("Paste an AI reader key first. Google key: aistudio.google.com/app/apikey. Second key (backup): console.groq.com/keys.", true); return; }
   tbusy = true; tReset(); tRefresh(); tStatus(""); tProg(0.02, "Starting"); window.__tp = true;
@@ -1664,7 +1674,7 @@ async function runHand() {
     for (let i = 0; i < tfiles.length; i++) {
       tProg(0.05 + 0.8 * i / tfiles.length, tfiles.length > 1 ? "Reading page " + (i + 1) + " of " + tfiles.length : "Reading the handwriting"); await tick();
       const rf = await rotateFile(tfiles[i], $("h-rot").value); (await photoQuality(rf)).forEach((w) => { if (!qn.includes(w)) qn.push(w); });
-      if (kind === "xlsx") { const t = ocrToSheets(await ocrAI(rf, "register")); t.forEach((s) => sheets.push(tfiles.length > 1 ? { name: "Page" + (i + 1) + " " + s.name, rows: s.rows } : s)); }
+      if (kind === "xlsx") { const t = ocrToSheets(await ocrAI(rf, "register")); if ($("h-time").value === "12") t.forEach((s) => { s.rows = s.rows.map((r) => r.map(to12h)); }); t.forEach((s) => sheets.push(tfiles.length > 1 ? { name: "Page" + (i + 1) + " " + s.name, rows: s.rows } : s)); }
       else { if (i) blocks.push({ type: "pb" }); blocks.push(...ocrToBlocks(await ocrAI(rf, "doc"))); }
     }
     tProg(0.95, kind === "xlsx" ? "Building the Excel file" : "Building the Word file");
